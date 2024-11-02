@@ -1,6 +1,14 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import logging
+from sklearn.preprocessing import LabelEncoder
+
+def encode_categorical_features(df, categorical_features):
+    le = LabelEncoder()
+    for feature in categorical_features:
+        if feature in df.columns and df[feature].notnull().all():
+            df[feature] = le.fit_transform(df[feature].astype(str))
+    return df
 
 def plot_correlation_heatmap(df, sentiment_columns):
     correlation_matrix = df[sentiment_columns].corr()
@@ -8,7 +16,7 @@ def plot_correlation_heatmap(df, sentiment_columns):
     sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
     plt.title('Correlation Heatmap of Sentiment Scores')
     plt.show()
-    
+
 def correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topic_column='topic'):
     """
     Correlate sentiment scores with topics and visualize the results.
@@ -29,11 +37,13 @@ def correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topi
     plt.xticks(rotation=45)
     plt.show()
 
-
 def calculate_and_plot_correlations(df, feature_list, sentiment_column):
     """Calculate correlations between specified features and sentiment column, and plot results."""
     correlation_results = {}
-    
+
+    # Drop NaN values to avoid calculation errors
+    df = df.dropna(subset=feature_list + [sentiment_column])
+
     # Calculate correlations
     logging.info("Calculating correlations...")
     for feature in feature_list:
@@ -52,5 +62,3 @@ def calculate_and_plot_correlations(df, feature_list, sentiment_column):
     plt.show()
 
     return correlation_results
-# Example usage:
-# plot_correlation_heatmap(df, ['afinn_sentiment', 'jockers_sentiment', 'nrc_sentiment'])

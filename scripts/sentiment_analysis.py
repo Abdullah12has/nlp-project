@@ -10,8 +10,17 @@ from sklearn.feature_extraction.text import CountVectorizer
 import seaborn as sns
 import pandas as pd
 import torch
-from transformers import BertTokenizer, BertForSequenceClassification
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 from transformers import Trainer, TrainingArguments
+from gensim.models import KeyedVectors
+
+# Load the DistilBert tokenizer
+tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
+
+def preprocess_text(text):
+    """Tokenization and truncation."""
+    inputs = tokenizer(text, max_length=512, truncation=True, padding='max_length', return_tensors='pt')
+    return inputs
 
 def classify_sentiment(df, score_column):
     """Classifies the sentiment of the text based on the score column."""
@@ -28,10 +37,15 @@ def generate_wordcloud(df, sentiment):
     plt.title(f'Most Common Words in {sentiment.capitalize()} Speeches')
     plt.show()
 
-def ngram_analysis(df, sentiment, n=2):
-    """Performs n-gram analysis for the specified sentiment."""
+def ngram_analysis(df, sentiment, n=2, feature=None):
+    """Performs n-gram analysis for the specified sentiment, optionally by a feature."""
+    if feature:
+        # If feature is provided, filter by the feature as well
+        sentiment_texts = df[(df['sentiment'] == sentiment) & (df[feature].notnull())]['cleaned_text']
+    else:
+        sentiment_texts = df[df['sentiment'] == sentiment]['cleaned_text']
+        
     vectorizer = CountVectorizer(ngram_range=(n, n))
-    sentiment_texts = df[df['sentiment'] == sentiment]['cleaned_text']
     ngrams = vectorizer.fit_transform(sentiment_texts)
     ngram_counts = Counter(ngrams.toarray().sum(axis=0))
     ngram_features = vectorizer.get_feature_names_out()
@@ -50,7 +64,7 @@ def get_word_vectors(texts, model):
 
 def train_sentiment_model_with_word2vec(df, text_column, label_column):
     """Trains a sentiment classification model using Word2Vec embeddings."""
-    w2v_model = Word2Vec.load("models/GoogleNews-vectors-negative300.bin")  
+    w2v_model = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
     X_train, X_test, y_train, y_test = train_test_split(df[text_column], df[label_column], test_size=0.3, random_state=42)
     X_train_vec = get_word_vectors(X_train, w2v_model)
     X_test_vec = get_word_vectors(X_test, w2v_model)
@@ -93,15 +107,13 @@ def calculate_correlation(df, feature_list, sentiment_column):
     return correlations
 
 def train_sentiment_model_with_bert(df, text_column, label_column):
-    """Trains a sentiment classification model using BERT."""
-    # Load BERT tokenizer and model
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+    """Trains a sentiment classification model using DistilBert."""
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
+    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english', num_labels=2)
 
-    # Tokenize the input text
-    encodings = tokenizer(df[text_column].tolist(), truncation=True, padding=True, max_length=128)
+    encodings = tokenizer(df[text_column].tolist(), truncation=True, padding=True, max_length=512)
+    print("Encoded input shape:", encodings['input_ids'].shape)
     
-    # Create PyTorch dataset
     class SentimentDataset(torch.utils.data.Dataset):
         def __init__(self, encodings, labels):
             self.encodings = encodings
@@ -115,11 +127,9 @@ def train_sentiment_model_with_bert(df, text_column, label_column):
         def __len__(self):
             return len(self.labels)
 
-    # Create dataset
     labels = df[label_column].apply(lambda x: 1 if x == 'positive' else 0).tolist()
     dataset = SentimentDataset(encodings, labels)
 
-    # Define training arguments
     training_args = TrainingArguments(
         output_dir='./results',
         num_train_epochs=3,
@@ -128,7 +138,6 @@ def train_sentiment_model_with_bert(df, text_column, label_column):
         logging_steps=10,
     )
 
-    # Train the model
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -136,9 +145,12 @@ def train_sentiment_model_with_bert(df, text_column, label_column):
     )
     
     trainer.train()
-
-    # Save the trained model
     model.save_pretrained("sentiment_model")
+
+def evaluate_model(trainer, test_dataset):
+    """Evaluates the trained model on the test dataset."""
+    results = trainer.evaluate(test_dataset)
+    print("Test Results:", results)
 
 # Example usage:
 # df = pd.read_csv("path/to/your/data/senti_df.csv")  # Load your DataFrame
@@ -147,3 +159,4 @@ def train_sentiment_model_with_bert(df, text_column, label_column):
 # ngram_analysis(df, 'positive', 2)
 # train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')
 # train_sentiment_model_with_bert(df, 'cleaned_text', 'sentiment')
+# test_df = pd.read_csv

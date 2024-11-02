@@ -22,13 +22,31 @@ def predict_sentiment_with_roberta(df, text_column):
     """
     # Load sentiment-analysis pipeline
     sentiment_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
-    
-    # Predict sentiment for each text entry
-    sentiments = sentiment_pipeline(df[text_column].tolist())
-    
-    # Extract the label and score for each prediction
-    df['roberta_sentiment'] = [result['label'] for result in sentiments]
-    df['roberta_score'] = [result['score'] for result in sentiments]
+
+    # Initialize lists to hold predictions and scores
+    roberta_sentiments = []
+    roberta_scores = []
+
+    # Predict sentiment for each text entry in batches
+    batch_size = 16  # You can adjust this based on your memory capacity
+    for i in range(0, len(df), batch_size):
+        batch_texts = df[text_column].tolist()[i:i + batch_size]
+        
+        # Ensure that all texts are padded correctly
+        try:
+            sentiments = sentiment_pipeline(batch_texts, truncation=True, padding=True, max_length=512)
+            # Extract the label and score for each prediction in the batch
+            for result in sentiments:
+                roberta_sentiments.append(result['label'])
+                roberta_scores.append(result['score'])
+        except Exception as e:
+            logging.error(f"Error during prediction: {e}")
+            roberta_sentiments.extend(['unknown'] * len(batch_texts))  # Handle the error case
+            roberta_scores.extend([0.0] * len(batch_texts))  # Dummy score for unknown cases
+
+    # Assign the predictions to the DataFrame
+    df['roberta_sentiment'] = roberta_sentiments
+    df['roberta_score'] = roberta_scores
     
     return df
 

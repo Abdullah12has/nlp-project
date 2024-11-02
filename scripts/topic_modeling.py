@@ -34,14 +34,11 @@ def train_lda_model(df, text_column):
     vis = pyLDAvis.gensim_models.prepare(best_model, corpus, dictionary)
     return best_model, dictionary, corpus, vis
 
-def train_bertopic_model(df, text_column):
-    """Train a BERTopic model with hyperparameter tuning."""
-    model = BERTopic()
-    topics, _ = model.fit_transform(df[text_column].tolist())
-
-    # Visualization
-    model.visualize_topics()
-    return model
+def train_bertopic_model(documents):
+    # Initialize the model without unsupported arguments
+    topic_model = BERTopic()  # Remove n_topics if unsupported
+    topics, probs = topic_model.fit_transform(documents)
+    return topic_model, topics, probs
 
 def analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'speaker'], topic_model=None):
     """Analyze topic distribution across specified groups."""
