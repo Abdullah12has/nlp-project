@@ -138,7 +138,14 @@ if __name__ == '__main__':
     # Step 6: Speech Word Frequency Analysis
     try:
         logging.info("Classifying sentiment and analyzing word frequencies...")
-        df = classify_sentiment(df, SENTIMENT_SCORE_COLUMN)
+        df, sentiment_summary = classify_sentiment(df)
+        if sentiment_summary:
+            logging.info("Sentiment Classification Summary:")
+            for key, value in sentiment_summary.items():
+                logging.info(f"{key}: {value}")
+        else:
+            logging.error("Sentiment classification failed to produce summary")
+        
         generate_wordcloud(df, 'positive')
         generate_wordcloud(df, 'negative')
 
