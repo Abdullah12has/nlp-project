@@ -129,6 +129,7 @@ def ngram_analysis(df, sentiment, n=2, feature=None):
     top_ngrams = sorted(zip(ngram_features, ngram_counts.values()), key=lambda x: x[1], reverse=True)[:10]
     for ngram, count in top_ngrams:
         print(f"{ngram}: {count}")
+    return top_ngrams
 
 def get_word_vectors(texts, model):
     """Generate average word vectors for each text using the Word2Vec model."""
@@ -221,3 +222,65 @@ def train_sentiment_model_with_bert(df, text_column, label_column):
     
     trainer.train()
     model.save_pretrained("sentiment_model")
+
+def generate_ngram_wordcloud(ngrams, title, filename=None):
+    """
+    Generate and save/display wordcloud for n-grams
+    
+    Args:
+        ngrams: Counter object of n-grams and their frequencies
+        title: Title for the wordcloud plot
+        filename: Optional filename to save the plot
+    """
+    # Convert n-grams to space-separated strings for wordcloud
+    text = {' '.join(k): v for k, v in ngrams.items()}
+    
+    # Create and generate a word cloud image
+    wordcloud = WordCloud(
+        width=1600, 
+        height=800,
+        background_color='white',
+        max_words=50,
+        collocations=False  # Important for n-grams
+    ).generate_from_frequencies(text)
+    
+    # Display the word cloud
+    plt.figure(figsize=(20,10))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.title(title, fontsize=20, pad=20)
+    
+    # Save if filename provided
+    if filename:
+        plt.savefig(filename, bbox_inches='tight', dpi=300)
+        plt.close()
+    else:
+        plt.show()
+
+def analyze_and_visualize_ngrams(df, sentiment_type='positive', n_range=(2,3)):
+    """
+    Analyze and visualize n-grams for given sentiment type
+    
+    Args:
+        df: DataFrame with speeches and sentiment
+        sentiment_type: 'positive' or 'negative'
+        n_range: tuple of (min_n, max_n) for n-gram analysis
+    """
+    results = {}
+    
+    for n in range(n_range[0], n_range[1] + 1):
+        # Get n-grams
+        ngrams = ngram_analysis(df, sentiment_type, n)
+        results[n] = ngrams
+        
+        # Generate wordcloud
+        title = f"Most Common {n}-grams in {sentiment_type.title()} Speeches"
+        filename = f"wordcloud_{n}gram_{sentiment_type}.png"
+        generate_ngram_wordcloud(ngrams, title, filename)
+        
+        # Also print top n-grams
+        print(f"\nTop 10 {n}-grams for {sentiment_type} speeches:")
+        for gram, count in ngrams.most_common(10):
+            print(f"{''.join(gram)}: {count}")
+    
+    return results

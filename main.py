@@ -9,7 +9,8 @@ from scripts.sentiment_analysis import (
     ngram_analysis,
     plot_most_common_words,
     train_sentiment_model_with_word2vec,
-    train_sentiment_model_with_bert
+    train_sentiment_model_with_bert,
+    analyze_and_visualize_ngrams
 )
 from scripts.sentiment_correlation import (
     plot_correlation_heatmap,
@@ -149,21 +150,36 @@ if __name__ == '__main__':
         generate_wordcloud(df, 'positive')
         generate_wordcloud(df, 'negative')
 
-        logging.info("Running n-gram analysis...")
-        ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
-        ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
-
-        for feature in ['party_group', 'gender']:
-            ngram_analysis(df, 'positive', feature=feature)
-            ngram_analysis(df, 'negative', feature=feature)
-
-        # Plotting most common words
+        # Plot most common words for each sentiment
         logging.info("Plotting most common words for positive speeches...")
-        plot_most_common_words(df, 'positive')  # Call the function for positive sentiment
+        plot_most_common_words(df, 'positive')
         logging.info("Plotting most common words for negative speeches...")
-        plot_most_common_words(df, 'negative')  # Call the function for negative sentiment
+        plot_most_common_words(df, 'negative')
+    
+        logging.info("Word frequency and sentiment analysis completed!")
 
-        logging.info("Word frequency and n-gram analysis completed!")
+        logging.info("Running bi-gram analysis...") 
+        bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
+        bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
+
+        logging.info("Running tri-gram analysis...") 
+        trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
+        trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
+
+        
+
+
+
+
+
+
+
+
+        # for feature in ['party_group', 'gender']:
+        #     ngram_analysis(df, 'positive', feature=feature)
+        #     ngram_analysis(df, 'negative', feature=feature)
+
+        # logging.info("Word frequency and n-gram analysis completed!")
         
     except Exception as e:
         logging.error(f"Error during sentiment classification or analysis: {e}")
