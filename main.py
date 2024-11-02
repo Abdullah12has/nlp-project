@@ -31,6 +31,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
@@ -40,11 +41,6 @@ TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = True  # Set to True to enable debug testing
 
-def encode_categorical_features(df, categorical_features):
-    for feature in categorical_features:
-        # Convert categorical variables to numeric labels
-        df[feature] = df[feature].astype('category').cat.codes
-    return df
 
 if __name__ == '__main__':
     start_time = time.time()  # Start the timer
@@ -52,21 +48,21 @@ if __name__ == '__main__':
     # Step 1: Load Data
     try:
         logging.info("Loading data...")
-
+        
         # Check if DATA_PATH is defined and valid
         if not os.path.exists(DATA_PATH):
             logging.error("DATA_PATH is not defined or the file does not exist.")
             raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
-
+        
         df = pd.read_csv(DATA_PATH)
-
+        
         # Drop rows with missing sentiment values
         df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
-
+        
         # If in DEBUG_MODE, take a sample of the data
         if DEBUG_MODE:
             df = df.sample(n=min(1000, len(df)))  # Adjust sample size as needed
-
+        
         logging.info("Data loaded successfully!")
         logging.info(f"Data types:\n{df.dtypes}")
 
@@ -75,10 +71,14 @@ if __name__ == '__main__':
             df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce')
             if df['speech_date'].isnull().any():
                 logging.warning("Some 'speech_date' entries were coerced to NaT.")
+            df['party'] = df['party'].astype(str)
             df['speech_date'] = df['speech_date'].view(np.int64) // 10**9  # Convert to seconds since epoch
 
-        # Handle any other necessary conversions
-        df['year'] = pd.to_numeric(df['year'], errors='coerce')  # Ensure 'year' is numeric
+        # Handle time conversion
+        if 'time' in df.columns:
+            df['time'] = pd.to_numeric(df['time'], errors='coerce')
+            if df['time'].isnull().any():
+                logging.warning("Some 'time' entries were coerced to NaN.")
 
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -88,7 +88,31 @@ if __name__ == '__main__':
     categorical_features = ['gender', 'party_group']
     df = encode_categorical_features(df, categorical_features)
 
-    # Step 3: Text Preprocessing
+    # Step 3: Handle Missing Values
+    try:
+        logging.info("Checking for missing values in the DataFrame...")
+        missing_values = df.isnull().sum()
+        logging.info(f"Missing values in each column:\n{missing_values[missing_values > 0]}")
+
+        if df['year'].isnull().any():
+            logging.warning("Missing values found in 'year' column; filling with median.")
+            df['year'].fillna(df['year'].median(), inplace=True)
+
+        if df['gender'].isnull().any():
+            logging.warning("Missing values found in 'gender' column; filling with 'Unknown'.")
+            df['gender'].fillna('Unknown', inplace=True)
+
+        if df['party_group'].isnull().any():
+            logging.warning("Missing values found in 'party_group' column; filling with 'Unknown'.")
+            df['party_group'].fillna('Unknown', inplace=True)
+
+        logging.info("Missing values handled successfully.")
+        
+    except Exception as e:
+        logging.error(f"Error handling missing values: {e}")
+        raise
+
+    # Step 4: Text Preprocessing
     try:
         logging.info("Starting text preprocessing...")
         preprocessor = TextPreprocessor()
@@ -98,17 +122,17 @@ if __name__ == '__main__':
         logging.error(f"Error during text preprocessing: {e}")
         raise
 
-    # Step 4: Initial Data Exploration
+    # Step 5: Initial Data Exploration
     try:
         logging.info("Exploring data distributions...")
-        for feature in ['speech_date', 'year', 'gender', 'party_group']:
+        for feature in ['speech_date', 'year', 'time', 'gender', 'party_group']:
             if feature in df.columns:
                 plot_feature_distribution(df, feature)
         logging.info("Data exploration completed!")
     except Exception as e:
         logging.error(f"Error during data exploration: {e}")
 
-    # Step 5: Speech Word Frequency Analysis
+    # Step 6: Speech Word Frequency Analysis
     try:
         logging.info("Classifying sentiment and analyzing word frequencies...")
         df = classify_sentiment(df, SENTIMENT_SCORE_COLUMN)
@@ -133,14 +157,10 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during sentiment classification or analysis: {e}")
 
-    # Step 6: Correlation Between Features and Sentiment
+    # Step 7: Correlation Between Features and Sentiment
     try:
         # Update this list based on the data types checked
-        feature_list = ['year', 'gender', 'party_group']  # Exclude 'speech_date'
-
-        # Check for missing values immediately before calculating correlations
-        if df[feature_list].isnull().any().any():
-            logging.warning("There are still missing values in features used for correlation.")
+        feature_list = ['year', 'gender', 'party_group']  # Exclude 'Speech_date' and 'time'
 
         # Call the function to calculate correlations and plot results
         correlations = calculate_and_plot_correlations(df, feature_list, SENTIMENT_SCORE_COLUMN)
@@ -150,7 +170,7 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during correlation calculations: {e}")
 
-    # Step 7: Correlation Heatmap
+    # Step 8: Correlation Heatmap
     try:
         logging.info("Calculating and plotting correlation heatmap...")
         sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
@@ -161,16 +181,22 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during correlation analysis: {e}")
 
-    # Step 8: Train Topic Models
+    # Step 9: Train Topic Models
     try:
         logging.info("Training topic models...")
-        topic_model, topics, probs = train_bertopic_model(df['cleaned_text'])
+        # lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text')
+        logging.info("LDA model training completed!")
+
+        # Set n_topics based on DEBUG_MODE
+        # n_topics = 5 if DEBUG_MODE else None  # Set to 5 in DEBUG_MODE, None for full in production
+        topic_model, topics, probs = train_bertopic_model(df['speech'])
+        bertopic_model = topic_model
         df['topic'] = topics
         logging.info("BERTopic model training completed!")
     except Exception as e:
         logging.error(f"Error during topic modeling: {e}")
 
-    # Step 9: Analyze Topic Evolution
+    # Step 10: Analyze Topic Evolution
     try:
         logging.info("Analyzing topic evolution over time...")
         if 'topic' in df.columns:
@@ -185,7 +211,7 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during topic evolution analysis: {e}")
 
-    # Step 10: Sentiment Correlation with Topics
+    # Step 11: Sentiment Correlation with Topics
     try:
         logging.info("Correlating sentiment with topics...")
         correlate_sentiment_with_topics(df, sentiment_column=SENTIMENT_SCORE_COLUMN, topic_column='topic')
@@ -193,7 +219,7 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during sentiment correlation analysis: {e}")
 
-    # Step 11: Comparison of Pre-Trained Sentiment Models with Ground Truth
+    # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
     try:
         logging.info("Comparing pre-trained sentiment models with ground truth...")
         df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
@@ -201,7 +227,7 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during sentiment model comparison: {e}")
 
-    # Step 12: Sentiment Prediction Using Extracted Features
+    # Step 13: Sentiment Prediction Using Extracted Features
     try:
         logging.info("Training sentiment classification models...")
         train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
@@ -210,21 +236,22 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"Error during sentiment prediction: {e}")
 
-    # Step 13: Topic Distributions Across Political Parties and Speakers
+    # Step 14: Topic Distributions Across Political Parties and Speakers
     try:
         logging.info("Analyzing topic distributions across parties and speakers...")
-        analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'])
+        analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
         logging.info("Topic distribution analysis completed!")
     except Exception as e:
         logging.error(f"Error during topic distribution analysis: {e}")
 
-    # Step 14: Explore Large Language Models (LLMs)
+    # Step 15: Explore LLM and Transformers
     try:
-        logging.info("Exploring large language models...")
-        explore_llm_transformers(df, TEXT_COLUMN)
-        logging.info("LLM exploration completed!")
+        logging.info("Exploring sentiment analysis with LLMs and transformers...")
+        df = explore_llm_transformers(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
+        logging.info("LLM and transformer exploration completed!")
     except Exception as e:
         logging.error(f"Error during LLM exploration: {e}")
-
-    end_time = time.time()  # End the timer
-    logging.info(f"Script completed in {end_time - start_time:.2f} seconds.")
+        
+    # Final execution time
+    execution_time = time.time() - start_time
+    logging.info(f"Total execution time: {execution_time:.2f} seconds")
