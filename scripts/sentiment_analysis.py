@@ -12,6 +12,7 @@ import pandas as pd
 import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 from transformers import Trainer, TrainingArguments
+import warnings
 
 # Load the DistilBert tokenizer
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
@@ -21,10 +22,88 @@ def preprocess_text(text):
     inputs = tokenizer(text, max_length=512, truncation=True, padding='max_length', return_tensors='pt')
     return inputs
 
-def classify_sentiment(df, score_column):
-    """Classifies the sentiment of the text based on the score column."""
-    df['sentiment'] = df[score_column].apply(lambda x: 'positive' if x > 0 else 'negative')
-    return df
+def classify_sentiment(df):
+    """
+    Classifies sentiment by combining multiple sentiment scores.
+    """
+    try:
+        # Create copies of the input data to avoid warnings
+        df = df.copy()
+        
+        sentiment_columns = [
+            'afinn_sentiment',
+            'bing_sentiment', 
+            'nrc_sentiment',
+            'sentiword_sentiment',
+            'hu_sentiment'
+        ]
+        
+        sd_columns = [
+            'afinn_sd', 
+            'bing_sd', 
+            'nrc_sd', 
+            'sentiword_sd', 
+            'hu_sd'
+        ]
+        
+        # Verify all required columns exist
+        missing_cols = [col for col in sentiment_columns + sd_columns if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Missing required columns: {missing_cols}")
+            
+        # 1. Normalize scores to same scale (-1 to 1)
+        normalized_scores = pd.DataFrame(index=df.index)
+        for col in sentiment_columns:
+            max_abs = df[col].abs().max()
+            if max_abs != 0:
+                normalized_scores[f'{col}_norm'] = df[col] / max_abs
+            else:
+                normalized_scores[f'{col}_norm'] = df[col]
+        
+        # 2. Calculate weights
+        weights = pd.DataFrame(index=df.index)
+        for score_col, sd_col in zip(sentiment_columns, sd_columns):
+            sd_values = df[sd_col].fillna(df[sd_col].mean())
+            weights[score_col] = 1 / (sd_values + 1e-6)
+        
+        # 3. Calculate weighted average sentiment
+        final_score = pd.Series(0, index=df.index)
+        total_weight = pd.Series(0, index=df.index)
+        
+        for col in sentiment_columns:
+            norm_col = f'{col}_norm'
+            weight = weights[col]
+            final_score += normalized_scores[norm_col] * weight
+            total_weight += weight
+        
+        final_score = final_score / total_weight
+        
+        # 4. Calculate agreement
+        binary_sentiments = pd.DataFrame(index=df.index)
+        for col in sentiment_columns:
+            binary_sentiments[col] = np.where(df[col] > 0, 1, 0)
+        agreement = (binary_sentiments.mean(axis=1) * 100).round(2)
+        
+        # 5. Add results to dataframe
+        df['sentiment'] = np.where(final_score > 0, 'positive', 'negative')
+        df['sentiment_confidence'] = final_score.abs()
+        df['sentiment_agreement'] = agreement
+        
+        # 6. Create summary
+        summary = {
+            'total_speeches': len(df),
+            'positive_speeches': (df['sentiment'] == 'positive').sum(),
+            'negative_speeches': (df['sentiment'] == 'negative').sum(),
+            'avg_confidence': df['sentiment_confidence'].mean(),
+            'avg_agreement': agreement.mean(),
+            'high_confidence_predictions': (df['sentiment_confidence'] > 0.7).sum()
+        }
+        
+        return df, summary
+        
+    except Exception as e:
+        print(f"Detailed error in sentiment classification: {str(e)}")
+        return e
 
 def generate_wordcloud(df, sentiment):
     """Generates and displays a word cloud for the specified sentiment."""
