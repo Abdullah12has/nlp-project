@@ -6,6 +6,7 @@ import nltk
 # Ensure required NLTK packages are downloaded
 nltk.download('stopwords')
 nltk.download('wordnet')
+nltk.download('vader_lexicon')
 
 class TextPreprocessor:
     def __init__(self):

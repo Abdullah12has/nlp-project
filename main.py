@@ -30,6 +30,9 @@ from scripts.llm_exploration import explore_llm_transformers
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from transformers import pipeline
+import torch
+import gc
 
 
 # Setup logging
@@ -222,6 +225,9 @@ if __name__ == '__main__':
     # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
     try:
         logging.info("Comparing pre-trained sentiment models with ground truth...")
+        # Add device specification and batch size
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        classifier = pipeline("sentiment-analysis", device=device)
         df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
         logging.info("Pre-trained sentiment models comparison completed!")
     except Exception as e:
@@ -247,11 +253,51 @@ if __name__ == '__main__':
     # Step 15: Explore LLM and Transformers
     try:
         logging.info("Exploring sentiment analysis with LLMs and transformers...")
-        df = explore_llm_transformers(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
+        # Explicitly set device and manage memory better
+        device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        logging.info(f"Using device: {device}")
+        
+        # Set smaller batch size and add padding
+        classifier = pipeline(
+            "sentiment-analysis",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            device=device,
+            batch_size=4,  # Reduced batch size
+            padding=True,
+            truncation=True,
+            max_length=512  # Limit input length
+        )
+        
+        # Process in smaller chunks to avoid memory issues
+        chunk_size = 100
+        results = []
+        for i in range(0, len(df), chunk_size):
+            chunk = df[TEXT_COLUMN].iloc[i:i+chunk_size].tolist()
+            chunk_results = explore_llm_transformers(chunk, classifier)
+            results.extend(chunk_results)
+            
+            # Clear memory after each chunk
+            if device != "cpu":
+                torch.cuda.empty_cache()
+            gc.collect()
+        
+        df['llm_sentiment'] = results
         logging.info("LLM and transformer exploration completed!")
+        
     except Exception as e:
         logging.error(f"Error during LLM exploration: {e}")
-        
+        logging.warning("Skipping LLM exploration due to error")
+    finally:
+        # Cleanup
+        if device != "cpu":
+            torch.cuda.empty_cache()
+        gc.collect()
+
     # Final execution time
     execution_time = time.time() - start_time
     logging.info(f"Total execution time: {execution_time:.2f} seconds")
+
+    # After processing
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()

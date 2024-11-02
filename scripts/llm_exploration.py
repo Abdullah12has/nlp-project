@@ -1,6 +1,9 @@
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
 from transformers import pipeline
+import logging
+import torch
+import gc
 
 # Function to truncate text to a maximum length of 512 characters (or tokens if tokenized properly)
 def truncate_text(text, max_length=512):
@@ -23,7 +26,20 @@ def analyze_with_transformers(df, text_column, ground_truth_column):
     
     return df
 
-def explore_llm_transformers(df, text_column, ground_truth_column):
-    """Main function to explore LLM and transformer sentiment analysis."""
-    df = analyze_with_transformers(df, text_column, ground_truth_column)
-    return df
+def explore_llm_transformers(texts, classifier):
+    """
+    Process texts in batches using the provided classifier.
+    
+    Args:
+        texts (list): List of text strings to analyze
+        classifier: HuggingFace pipeline classifier
+    
+    Returns:
+        list: Sentiment predictions
+    """
+    try:
+        results = classifier(texts)
+        return [r['label'] for r in results]
+    except Exception as e:
+        logging.error(f"Error in LLM processing: {e}")
+        return ['NEUTRAL'] * len(texts)  # fallback value
