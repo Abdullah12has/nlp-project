@@ -36,6 +36,28 @@ def analyze_topic_distribution_with_representation(df, topic_column='topic', gro
         for topic in range(topic_model.num_topics):
             words = topic_model.get_topic(topic)
             print(f"Topic {topic}: {', '.join([word for word, _ in words])}")
+            
+            
+def topic_evolution_over_time(df, topic_column='topic', time_column='year'):
+    """
+    Analyzes how topics evolve over time.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing topic and time information.
+        topic_column (str): Name of the column with topic information.
+        time_column (str): Name of the column with time information (e.g., year).
+    """
+    # Group by time and topic, counting occurrences
+    topic_trends = df.groupby([time_column, topic_column]).size().unstack(fill_value=0)
+    
+    # Plotting the evolution of topics over time
+    plt.figure(figsize=(12, 6))
+    sns.lineplot(data=topic_trends.T)
+    plt.title('Topic Evolution Over Time')
+    plt.xlabel('Year')
+    plt.ylabel('Number of Speeches')
+    plt.legend(title='Topics', bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.show()
 
 # Example usage:
 # lda_model, dictionary, corpus = train_lda_model(df, 'text')

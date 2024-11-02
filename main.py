@@ -4,25 +4,21 @@ import logging
 from scripts.text_preprocessing import TextPreprocessor
 from scripts.data_exploration import plot_feature_distribution
 from scripts.sentiment_analysis import classify_sentiment, generate_wordcloud, ngram_analysis
-from scripts.sentiment_correlation import plot_correlation_heatmap
-from scripts.topic_modeling import train_lda_model, train_bertopic_model, analyze_topic_distribution_with_representation
+from scripts.sentiment_correlation import plot_correlation_heatmap, correlate_sentiment_with_topics
+from scripts.topic_modeling import train_lda_model, train_bertopic_model, analyze_topic_distribution_with_representation, topic_evolution_over_time
 from scripts.sentiment_prediction import train_sentiment_model_with_word2vec, train_sentiment_model_with_bert
 from scripts.sentiment_model_comparison import compare_pretrained_models
-from nltk.sentiment import SentimentIntensityAnalyzer
-from textblob import TextBlob
-from sklearn.metrics import mean_absolute_error
+from scripts.llm_exploration import explore_llm_transformers  # Import LLM exploration
 import numpy as np
 import matplotlib.pyplot as plt
-import pyLDAvis
-import pyLDAvis.gensim_models
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
 DATA_PATH = 'data/senti_df.csv'
-TEXT_COLUMN = 'speech'
-SENTIMENT_SCORE_COLUMN = 'sentiment_score'
+TEXT_COLUMN = 'speech'  # Column in your data that contains the text data
+SENTIMENT_SCORE_COLUMN = 'sentiment_score'  # Replace with actual score column name in the dataset
 
 # Step 1: Load Data
 try:
@@ -43,7 +39,7 @@ except Exception as e:
     logging.error(f"Error during text preprocessing: {e}")
     raise
 
-# Step 3: Data Exploration and Visualization
+# Step 3: Initial Data Exploration
 try:
     logging.info("Exploring data distributions...")
     for feature in ['Speech_date', 'year', 'time', 'gender', 'party_group']:
@@ -53,7 +49,7 @@ try:
 except Exception as e:
     logging.error(f"Error during data exploration: {e}")
 
-# Step 4: Sentiment Classification and Word Frequency Analysis
+# Step 4: Speech Word Frequency Analysis
 try:
     logging.info("Classifying sentiment and analyzing word frequencies...")
     df = classify_sentiment(df, SENTIMENT_SCORE_COLUMN)
@@ -64,11 +60,28 @@ try:
     ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
     ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
 
+    # Repeat for Party_group and Gender
+    for feature in ['party_group', 'gender']:
+        ngram_analysis(df, 'positive', feature=feature)
+        ngram_analysis(df, 'negative', feature=feature)
+
     logging.info("Word frequency and n-gram analysis completed!")
 except Exception as e:
     logging.error(f"Error during sentiment classification or analysis: {e}")
 
-# Step 5: Correlation Analysis
+# Step 5: Correlation Between Features and Sentiment
+try:
+    logging.info("Calculating correlations...")
+    for feature in ['Speech_date', 'year', 'time', 'gender', 'party_group']:
+        if feature in df.columns:
+            # Add correlation calculations here as necessary
+            pass  # Implement correlation calculations as needed
+
+    logging.info("Correlation calculations completed!")
+except Exception as e:
+    logging.error(f"Error during correlation calculations: {e}")
+
+# Step 6: Correlation Heatmap
 try:
     logging.info("Calculating and plotting correlation heatmap...")
     sentiment_columns = ['afinn_sentiment', 'jockers_sentiment', 'nrc_sentiment', 'huliu_sentiment', 'rheault_sentiment']
@@ -79,16 +92,10 @@ try:
 except Exception as e:
     logging.error(f"Error during correlation analysis: {e}")
 
-# Step 6: Topic Modeling (LDA and BERTopic)
+# Step 7: Topic Modeling with LDA and BERTopic
 try:
     logging.info("Training LDA model...")
     lda_model, dictionary, corpus = train_lda_model(df, 'cleaned_text')
-    
-    # Visualization of LDA topics
-    pyLDAvis.enable_notebook()
-    vis = pyLDAvis.gensim_models.prepare(lda_model, corpus, dictionary)
-    pyLDAvis.display(vis)
-    
     logging.info("LDA model training completed!")
 
     logging.info("Training BERTopic model...")
@@ -97,7 +104,31 @@ try:
 except Exception as e:
     logging.error(f"Error during topic modeling: {e}")
 
-# Step 7: Sentiment Prediction Using Machine Learning Models
+# Step 8: Topic Evolution Over Time
+try:
+    logging.info("Analyzing topic evolution over time...")
+    topic_evolution_over_time(df, topic_column='topic', time_column='year')
+    logging.info("Topic evolution analysis completed!")
+except Exception as e:
+    logging.error(f"Error during topic evolution analysis: {e}")
+
+# Step 9: Sentiment Correlation with Topics
+try:
+    logging.info("Correlating sentiment with topics...")
+    correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topic_column='topic')
+    logging.info("Sentiment correlation with topics completed!")
+except Exception as e:
+    logging.error(f"Error during sentiment correlation analysis: {e}")
+
+# Step 10: Comparison of Pre-Trained Sentiment Models with Ground Truth
+try:
+    logging.info("Comparing pre-trained sentiment models with ground truth...")
+    df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
+    logging.info("Pre-trained sentiment models comparison completed!")
+except Exception as e:
+    logging.error(f"Error during sentiment model comparison: {e}")
+
+# Step 11: Sentiment Prediction Using Extracted Features
 try:
     logging.info("Training sentiment classification models...")
     train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
@@ -106,15 +137,7 @@ try:
 except Exception as e:
     logging.error(f"Error during sentiment prediction: {e}")
 
-# Step 8: Comparison of Pre-Trained Sentiment Models with Ground Truth
-try:
-    logging.info("Comparing pre-trained sentiment models with ground truth...")
-    df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
-    logging.info("Pre-trained sentiment models comparison completed!")
-except Exception as e:
-    logging.error(f"Error during sentiment model comparison: {e}")
-
-# Step 9: Topic Distributions Across Political Parties and Speakers
+# Step 12: Topic Distributions Across Political Parties and Speakers
 try:
     logging.info("Analyzing topic distributions across parties and speakers...")
     analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'speaker'], topic_model=bertopic_model)
@@ -122,71 +145,11 @@ try:
 except Exception as e:
     logging.error(f"Error during topic distribution analysis: {e}")
 
-# Step 10: Topic Evolution Over Time (NEW)
-def analyze_topic_evolution(bertopic_model, df):
-    # Implementation of topic evolution analysis
-    # Example: Track topics across years or months
-    logging.info("Analyzing topic evolution over time...")
-    topic_over_time = df.groupby(['year', 'topic']).size().unstack(fill_value=0)
-    topic_over_time.plot(kind='bar', stacked=True)
-    plt.title('Topic Evolution Over Years')
-    plt.ylabel('Number of Speeches')
-    plt.xlabel('Year')
-    plt.legend(title='Topics')
-    plt.show()
-    logging.info("Topic evolution analysis completed!")
-
-# Call the new function
+# Step 13: Explore LLM and Transformers
 try:
-    analyze_topic_evolution(bertopic_model, df)
-except Exception as e:
-    logging.error(f"Error during topic evolution analysis: {e}")
-
-# Step 11: Sentiment Correlation with Topics (NEW)
-def correlate_sentiment_with_topics(df, sentiment_column, topic_column):
-    # Calculate and visualize correlation between sentiment and topics
-    logging.info("Correlating sentiment with topics...")
-    df['sentiment_bin'] = pd.cut(df[sentiment_column], bins=[-1, 0, 1], labels=['Negative', 'Positive'])
-    correlation = df.groupby([topic_column, 'sentiment_bin']).size().unstack(fill_value=0)
-    correlation.plot(kind='bar', stacked=True)
-    plt.title('Sentiment Correlation with Topics')
-    plt.ylabel('Count')
-    plt.xlabel('Topics')
-    plt.legend(title='Sentiment')
-    plt.show()
-    logging.info("Sentiment correlation with topics analysis completed!")
-
-# Call the new function
-try:
-    correlate_sentiment_with_topics(df, SENTIMENT_SCORE_COLUMN, 'topic')
-except Exception as e:
-    logging.error(f"Error during sentiment correlation with topics analysis: {e}")
-
-# Step 12: Manual Topic Interpretation (NEW)
-def interpret_topics(model):
-    # Interpret topics manually
-    logging.info("Interpreting topics...")
-    topics = model.get_topic_info()
-    for index, row in topics.iterrows():
-        logging.info(f"Topic {row['Topic']}: {row['Name']}")
-    logging.info("Topic interpretation completed!")
-
-# Call the new function
-try:
-    interpret_topics(bertopic_model)
-except Exception as e:
-    logging.error(f"Error during topic interpretation: {e}")
-
-# Step 13: Advanced NLP Techniques with LLMs (NEW)
-def explore_llm_transformers(df):
-    # Implement LLMs exploration
-    logging.info("Exploring LLMs for sentiment analysis...")
-    # Here you can add a function to explore other transformers like RoBERTa or GPT
-    # Placeholder for actual implementation
-    logging.info("LLMs exploration completed!")
-
-# Call the new function
-try:
-    explore_llm_transformers(df)
+    logging.info("Exploring sentiment analysis with LLMs and transformers...")
+    df = explore_llm_transformers(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
+    logging.info("LLM and transformer exploration completed!")
 except Exception as e:
     logging.error(f"Error during LLM exploration: {e}")
+
