@@ -42,7 +42,7 @@ logging.basicConfig(level=logging.INFO)
 DATA_PATH = 'data/senti_df.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
-DEBUG_MODE = True  # Set to True to enable debug testing
+DEBUG_MODE = False  # Set to True to enable debug testing
 
 
 if __name__ == '__main__':
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             logging.error("DATA_PATH is not defined or the file does not exist.")
             raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
         
-        df = pd.read_csv(DATA_PATH)
+        df = pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
         
         # Drop rows with missing sentiment values
         df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
@@ -125,15 +125,15 @@ if __name__ == '__main__':
         logging.error(f"Error during text preprocessing: {e}")
         raise
 
-    # Step 5: Initial Data Exploration
-    try:
-        logging.info("Exploring data distributions...")
-        for feature in ['speech_date', 'year', 'time', 'gender', 'party_group']:
-            if feature in df.columns:
-                plot_feature_distribution(df, feature)
-        logging.info("Data exploration completed!")
-    except Exception as e:
-        logging.error(f"Error during data exploration: {e}")
+    # # Step 5: Initial Data Exploration
+    # try:
+    #     logging.info("Exploring data distributions...")
+    #     for feature in ['speech_date', 'year', 'time', 'gender', 'party_group']:
+    #         if feature in df.columns:
+    #             plot_feature_distribution(df, feature)
+    #     logging.info("Data exploration completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during data exploration: {e}")
 
     # Step 6: Speech Word Frequency Analysis
     try:
@@ -164,147 +164,148 @@ if __name__ == '__main__':
         plot_most_common_words(df, 'negative')  # Call the function for negative sentiment
 
         logging.info("Word frequency and n-gram analysis completed!")
+        
     except Exception as e:
         logging.error(f"Error during sentiment classification or analysis: {e}")
 
-    # Step 7: Correlation Between Features and Sentiment
-    try:
-        # Update this list based on the data types checked
-        feature_list = ['year', 'gender', 'party_group']  # Exclude 'Speech_date' and 'time'
+    # # Step 7: Correlation Between Features and Sentiment
+    # try:
+    #     # Update this list based on the data types checked
+    #     feature_list = ['year', 'gender', 'party_group']  # Exclude 'Speech_date' and 'time'
 
-        # Call the function to calculate correlations and plot results
-        correlations = calculate_and_plot_correlations(df, feature_list, SENTIMENT_SCORE_COLUMN)
+    #     # Call the function to calculate correlations and plot results
+    #     correlations = calculate_and_plot_correlations(df, feature_list, SENTIMENT_SCORE_COLUMN)
 
-        logging.info(f"Calculated correlations: {correlations}")
+    #     logging.info(f"Calculated correlations: {correlations}")
 
-    except Exception as e:
-        logging.error(f"Error during correlation calculations: {e}")
+    # except Exception as e:
+    #     logging.error(f"Error during correlation calculations: {e}")
 
-    # Step 8: Correlation Heatmap
-    try:
-        logging.info("Calculating and plotting correlation heatmap...")
-        sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
-        if all(col in df.columns for col in sentiment_columns):
-            plot_correlation_heatmap(df, sentiment_columns)
-        else:
-            logging.warning("Some sentiment columns are missing; skipping correlation heatmap.")
-    except Exception as e:
-        logging.error(f"Error during correlation analysis: {e}")
+    # # Step 8: Correlation Heatmap
+    # try:
+    #     logging.info("Calculating and plotting correlation heatmap...")
+    #     sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
+    #     if all(col in df.columns for col in sentiment_columns):
+    #         plot_correlation_heatmap(df, sentiment_columns)
+    #     else:
+    #         logging.warning("Some sentiment columns are missing; skipping correlation heatmap.")
+    # except Exception as e:
+    #     logging.error(f"Error during correlation analysis: {e}")
 
-    # Step 9: Train Topic Models
-    try:
-        logging.info("Training topic models...")
-        # lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text')
-        logging.info("LDA model training completed!")
+    # # Step 9: Train Topic Models
+    # try:
+    #     logging.info("Training topic models...")
+    #     # lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text')
+    #     logging.info("LDA model training completed!")
 
-        # Set n_topics based on DEBUG_MODE
-        # n_topics = 5 if DEBUG_MODE else None  # Set to 5 in DEBUG_MODE, None for full in production
-        topic_model, topics, probs = train_bertopic_model(df['speech'])
-        bertopic_model = topic_model
-        df['topic'] = topics
-        logging.info("BERTopic model training completed!")
-    except Exception as e:
-        logging.error(f"Error during topic modeling: {e}")
+    #     # Set n_topics based on DEBUG_MODE
+    #     # n_topics = 5 if DEBUG_MODE else None  # Set to 5 in DEBUG_MODE, None for full in production
+    #     topic_model, topics, probs = train_bertopic_model(df['speech'])
+    #     bertopic_model = topic_model
+    #     df['topic'] = topics
+    #     logging.info("BERTopic model training completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during topic modeling: {e}")
 
-    # Step 10: Analyze Topic Evolution
-    try:
-        logging.info("Analyzing topic evolution over time...")
-        if 'topic' in df.columns:
-            topic_evolution_over_time(df, topic_column='topic', time_column='year')
-            logging.info("Topic evolution analysis completed!")
+    # # Step 10: Analyze Topic Evolution
+    # try:
+    #     logging.info("Analyzing topic evolution over time...")
+    #     if 'topic' in df.columns:
+    #         topic_evolution_over_time(df, topic_column='topic', time_column='year')
+    #         logging.info("Topic evolution analysis completed!")
 
-            logging.info("Visualizing topic trends...")
-            visualize_topic_trends(df, topic_column='topic', time_column='year')
-            logging.info("Topic trends visualization completed!")
-        else:
-            logging.error("The 'topic' column is missing; cannot analyze topic evolution.")
-    except Exception as e:
-        logging.error(f"Error during topic evolution analysis: {e}")
+    #         logging.info("Visualizing topic trends...")
+    #         visualize_topic_trends(df, topic_column='topic', time_column='year')
+    #         logging.info("Topic trends visualization completed!")
+    #     else:
+    #         logging.error("The 'topic' column is missing; cannot analyze topic evolution.")
+    # except Exception as e:
+    #     logging.error(f"Error during topic evolution analysis: {e}")
 
-    # Step 11: Sentiment Correlation with Topics
-    try:
-        logging.info("Correlating sentiment with topics...")
-        correlate_sentiment_with_topics(df, sentiment_column=SENTIMENT_SCORE_COLUMN, topic_column='topic')
-        logging.info("Sentiment correlation with topics completed!")
-    except Exception as e:
-        logging.error(f"Error during sentiment correlation analysis: {e}")
+    # # Step 11: Sentiment Correlation with Topics
+    # try:
+    #     logging.info("Correlating sentiment with topics...")
+    #     correlate_sentiment_with_topics(df, sentiment_column=SENTIMENT_SCORE_COLUMN, topic_column='topic')
+    #     logging.info("Sentiment correlation with topics completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment correlation analysis: {e}")
 
-    # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
-    try:
-        logging.info("Comparing pre-trained sentiment models with ground truth...")
-        # Add device specification and batch size
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        classifier = pipeline("sentiment-analysis", device=device)
-        df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
-        logging.info("Pre-trained sentiment models comparison completed!")
-    except Exception as e:
-        logging.error(f"Error during sentiment model comparison: {e}")
+    # # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
+    # try:
+    #     logging.info("Comparing pre-trained sentiment models with ground truth...")
+    #     # Add device specification and batch size
+    #     device = "cuda" if torch.cuda.is_available() else "cpu"
+    #     classifier = pipeline("sentiment-analysis", device=device)
+    #     df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
+    #     logging.info("Pre-trained sentiment models comparison completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment model comparison: {e}")
 
-    # Step 13: Sentiment Prediction Using Extracted Features
-    try:
-        logging.info("Training sentiment classification models...")
-        train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
-        train_sentiment_model_with_bert(df, 'cleaned_text', 'sentiment')  # BERT Model
-        logging.info("Sentiment prediction model training completed!")
-    except Exception as e:
-        logging.error(f"Error during sentiment prediction: {e}")
+    # # Step 13: Sentiment Prediction Using Extracted Features
+    # try:
+    #     logging.info("Training sentiment classification models...")
+    #     train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
+    #     train_sentiment_model_with_bert(df, 'cleaned_text', 'sentiment')  # BERT Model
+    #     logging.info("Sentiment prediction model training completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment prediction: {e}")
 
-    # Step 14: Topic Distributions Across Political Parties and Speakers
-    try:
-        logging.info("Analyzing topic distributions across parties and speakers...")
-        analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
-        logging.info("Topic distribution analysis completed!")
-    except Exception as e:
-        logging.error(f"Error during topic distribution analysis: {e}")
+    # # Step 14: Topic Distributions Across Political Parties and Speakers
+    # try:
+    #     logging.info("Analyzing topic distributions across parties and speakers...")
+    #     analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
+    #     logging.info("Topic distribution analysis completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during topic distribution analysis: {e}")
 
-    # Step 15: Explore LLM and Transformers
-    try:
-        logging.info("Exploring sentiment analysis with LLMs and transformers...")
-        # Explicitly set device and manage memory better
-        device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        logging.info(f"Using device: {device}")
+    # # Step 15: Explore LLM and Transformers
+    # try:
+    #     logging.info("Exploring sentiment analysis with LLMs and transformers...")
+    #     # Explicitly set device and manage memory better
+    #     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    #     logging.info(f"Using device: {device}")
         
-        # Set smaller batch size and add padding
-        classifier = pipeline(
-            "sentiment-analysis",
-            model="distilbert-base-uncased-finetuned-sst-2-english",
-            device=device,
-            batch_size=4,  # Reduced batch size
-            padding=True,
-            truncation=True,
-            max_length=512  # Limit input length
-        )
+    #     # Set smaller batch size and add padding
+    #     classifier = pipeline(
+    #         "sentiment-analysis",
+    #         model="distilbert-base-uncased-finetuned-sst-2-english",
+    #         device=device,
+    #         batch_size=4,  # Reduced batch size
+    #         padding=True,
+    #         truncation=True,
+    #         max_length=512  # Limit input length
+    #     )
         
-        # Process in smaller chunks to avoid memory issues
-        chunk_size = 100
-        results = []
-        for i in range(0, len(df), chunk_size):
-            chunk = df[TEXT_COLUMN].iloc[i:i+chunk_size].tolist()
-            chunk_results = explore_llm_transformers(chunk, classifier)
-            results.extend(chunk_results)
+    #     # Process in smaller chunks to avoid memory issues
+    #     chunk_size = 100
+    #     results = []
+    #     for i in range(0, len(df), chunk_size):
+    #         chunk = df[TEXT_COLUMN].iloc[i:i+chunk_size].tolist()
+    #         chunk_results = explore_llm_transformers(chunk, classifier)
+    #         results.extend(chunk_results)
             
-            # Clear memory after each chunk
-            if device != "cpu":
-                torch.cuda.empty_cache()
-            gc.collect()
+    #         # Clear memory after each chunk
+    #         if device != "cpu":
+    #             torch.cuda.empty_cache()
+    #         gc.collect()
         
-        df['llm_sentiment'] = results
-        logging.info("LLM and transformer exploration completed!")
+    #     df['llm_sentiment'] = results
+    #     logging.info("LLM and transformer exploration completed!")
         
-    except Exception as e:
-        logging.error(f"Error during LLM exploration: {e}")
-        logging.warning("Skipping LLM exploration due to error")
-    finally:
-        # Cleanup
-        if device != "cpu":
-            torch.cuda.empty_cache()
-        gc.collect()
+    # except Exception as e:
+    #     logging.error(f"Error during LLM exploration: {e}")
+    #     logging.warning("Skipping LLM exploration due to error")
+    # finally:
+    #     # Cleanup
+    #     if device != "cpu":
+    #         torch.cuda.empty_cache()
+    #     gc.collect()
 
-    # Final execution time
-    execution_time = time.time() - start_time
-    logging.info(f"Total execution time: {execution_time:.2f} seconds")
+    # # Final execution time
+    # execution_time = time.time() - start_time
+    # logging.info(f"Total execution time: {execution_time:.2f} seconds")
 
-    # After processing
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+    # # After processing
+    # gc.collect()
+    # if torch.cuda.is_available():
+    #     torch.cuda.empty_cache()

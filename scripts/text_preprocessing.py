@@ -3,12 +3,28 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import nltk
 
-# Ensure required NLTK packages are downloaded
-nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('vader_lexicon')
+# Ensure required NLTK packages are downloaded only if necessary
+def download_nltk_resources():
+    try:
+        # Check for stopwords and WordNet lemmatizer data
+        stopwords.words('english')
+        
+    except LookupError:
+        nltk.download('stopwords')
+        nltk.download('vader_lexicon')
+        
+    try:
+        nltk.data.find('corpora/wordnet.zip')
+    except LookupError:
+        nltk.download('wordnet')
+        nltk.download('vader_lexicon')
+
+# only download when not there.
+download_nltk_resources()
+
 
 class TextPreprocessor:
+
     def __init__(self):
         self.stop_words = set(stopwords.words('english'))
         self.lemmatizer = WordNetLemmatizer()
