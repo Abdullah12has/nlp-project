@@ -7,7 +7,9 @@ from scripts.sentiment_analysis import (
     classify_sentiment,
     generate_wordcloud,
     ngram_analysis,
-    plot_most_common_words  
+    plot_most_common_words,
+    train_sentiment_model_with_word2vec,
+    train_sentiment_model_with_bert
 )
 from scripts.sentiment_correlation import (
     plot_correlation_heatmap,
@@ -21,11 +23,7 @@ from scripts.topic_modeling import (
     topic_evolution_over_time,
     visualize_topic_trends
 )
-from scripts.sentiment_prediction import (
-    train_sentiment_model_with_word2vec,
-    train_sentiment_model_with_bert,
-    predict_sentiment_with_roberta  # Import the new function
-)
+from scripts.sentiment_prediction import predict_sentiment_with_roberta
 from scripts.sentiment_model_comparison import compare_pretrained_models
 from scripts.llm_exploration import explore_llm_transformers
 import numpy as np
