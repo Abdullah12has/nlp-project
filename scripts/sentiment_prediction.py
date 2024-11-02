@@ -21,7 +21,7 @@ def predict_sentiment_with_roberta(df, text_column):
         pd.DataFrame: DataFrame with predicted sentiments.
     """
     # Load sentiment-analysis pipeline
-    sentiment_pipeline = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment")
+    sentiment_pipeline = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
     # Initialize lists to hold predictions and scores
     roberta_sentiments = []

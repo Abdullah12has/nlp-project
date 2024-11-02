@@ -35,8 +35,9 @@ def train_lda_model(df, text_column):
     return best_model, dictionary, corpus, vis
 
 def train_bertopic_model(documents):
-    # Initialize the model without unsupported arguments
-    topic_model = BERTopic()  # Remove n_topics if unsupported
+    """Train a BERTopic model."""
+    # Initialize the model
+    topic_model = BERTopic()  # Removed n_topics if unsupported
     topics, probs = topic_model.fit_transform(documents)
     return topic_model, topics, probs
 
@@ -54,15 +55,19 @@ def analyze_topic_distribution_with_representation(df, topic_column='topic', gro
 
     # Display topics with their top words
     if topic_model:
-        for topic in range(topic_model.num_topics):
+        num_topics = len(topic_model.get_topics())  # Get the number of topics
+        for topic in range(num_topics):
             words = topic_model.get_topic(topic)
-            print(f"Topic {topic}: {', '.join([word for word, _ in words])}")
+            if words:  # Check if the topic has any words
+                print(f"Topic {topic}: {', '.join([word for word, _ in words])}")
+            
+    
 
 def topic_evolution_over_time(df, topic_column='topic', time_column='year'):
     """Analyzes how topics evolve over time."""
     # Group by time and topic, counting occurrences
     topic_trends = df.groupby([time_column, topic_column]).size().unstack(fill_value=0)
-    
+
     # Plotting the evolution of topics over time
     plt.figure(figsize=(12, 6))
     sns.lineplot(data=topic_trends.T)
@@ -75,7 +80,7 @@ def topic_evolution_over_time(df, topic_column='topic', time_column='year'):
 
 def visualize_topic_trends(df, topic_column, time_column):
     """Visualize topic trends over time."""
-    topic_counts = df.groupby([time_column, topic_column]).size().unstack().fillna(0)
+    topic_counts = df.groupby([time_column, topic_column]).size().unstack(fill_value=0)
 
     plt.figure(figsize=(15, 8))
     for topic in topic_counts.columns:

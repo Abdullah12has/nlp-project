@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
-from gensim.models import Word2Vec
+from gensim.models import KeyedVectors
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 import seaborn as sns
@@ -12,7 +12,6 @@ import pandas as pd
 import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 from transformers import Trainer, TrainingArguments
-from gensim.models import KeyedVectors
 
 # Load the DistilBert tokenizer
 tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
@@ -40,7 +39,6 @@ def generate_wordcloud(df, sentiment):
 def ngram_analysis(df, sentiment, n=2, feature=None):
     """Performs n-gram analysis for the specified sentiment, optionally by a feature."""
     if feature:
-        # If feature is provided, filter by the feature as well
         sentiment_texts = df[(df['sentiment'] == sentiment) & (df[feature].notnull())]['cleaned_text']
     else:
         sentiment_texts = df[df['sentiment'] == sentiment]['cleaned_text']
@@ -58,13 +56,13 @@ def get_word_vectors(texts, model):
     vectors = []
     for text in texts:
         words = text.split()
-        vecs = [model.wv[word] for word in words if word in model.wv]
+        vecs = [model[word] for word in words if word in model]  # Access vectors directly from KeyedVectors
         vectors.append(np.mean(vecs, axis=0) if vecs else np.zeros(model.vector_size))
     return np.array(vectors)
 
 def train_sentiment_model_with_word2vec(df, text_column, label_column):
     """Trains a sentiment classification model using Word2Vec embeddings."""
-    w2v_model = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+    w2v_model = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)    
     X_train, X_test, y_train, y_test = train_test_split(df[text_column], df[label_column], test_size=0.3, random_state=42)
     X_train_vec = get_word_vectors(X_train, w2v_model)
     X_test_vec = get_word_vectors(X_test, w2v_model)
@@ -108,11 +106,9 @@ def calculate_correlation(df, feature_list, sentiment_column):
 
 def train_sentiment_model_with_bert(df, text_column, label_column):
     """Trains a sentiment classification model using DistilBert."""
-    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english')
     model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english', num_labels=2)
 
     encodings = tokenizer(df[text_column].tolist(), truncation=True, padding=True, max_length=512)
-    print("Encoded input shape:", encodings['input_ids'].shape)
     
     class SentimentDataset(torch.utils.data.Dataset):
         def __init__(self, encodings, labels):
@@ -146,17 +142,3 @@ def train_sentiment_model_with_bert(df, text_column, label_column):
     
     trainer.train()
     model.save_pretrained("sentiment_model")
-
-def evaluate_model(trainer, test_dataset):
-    """Evaluates the trained model on the test dataset."""
-    results = trainer.evaluate(test_dataset)
-    print("Test Results:", results)
-
-# Example usage:
-# df = pd.read_csv("path/to/your/data/senti_df.csv")  # Load your DataFrame
-# df = classify_sentiment(df, 'sentiment_score')
-# generate_wordcloud(df, 'positive')
-# ngram_analysis(df, 'positive', 2)
-# train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')
-# train_sentiment_model_with_bert(df, 'cleaned_text', 'sentiment')
-# test_df = pd.read_csv

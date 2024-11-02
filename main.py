@@ -40,6 +40,11 @@ TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = True  # Set to True to enable debug testing
 
+def encode_categorical_features(df, categorical_features):
+    for feature in categorical_features:
+        # Convert categorical variables to numeric labels
+        df[feature] = df[feature].astype('category').cat.codes
+    return df
 
 if __name__ == '__main__':
     start_time = time.time()  # Start the timer
@@ -47,21 +52,33 @@ if __name__ == '__main__':
     # Step 1: Load Data
     try:
         logging.info("Loading data...")
+
+        # Check if DATA_PATH is defined and valid
+        if not os.path.exists(DATA_PATH):
+            logging.error("DATA_PATH is not defined or the file does not exist.")
+            raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
+
         df = pd.read_csv(DATA_PATH)
-        
+
+        # Drop rows with missing sentiment values
+        df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
+
         # If in DEBUG_MODE, take a sample of the data
         if DEBUG_MODE:
             df = df.sample(n=min(1000, len(df)))  # Adjust sample size as needed
-        
+
         logging.info("Data loaded successfully!")
         logging.info(f"Data types:\n{df.dtypes}")
 
+        # Handle speech_date conversion
         if 'speech_date' in df.columns:
-            df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce').view(np.int64) // 10**9
+            df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce')
+            if df['speech_date'].isnull().any():
+                logging.warning("Some 'speech_date' entries were coerced to NaT.")
+            df['speech_date'] = df['speech_date'].view(np.int64) // 10**9  # Convert to seconds since epoch
 
-        if 'time' in df.columns:
-            df['time'] = pd.to_numeric(df['time'], errors='coerce')
-
+        # Handle any other necessary conversions
+        df['year'] = pd.to_numeric(df['year'], errors='coerce')  # Ensure 'year' is numeric
 
     except Exception as e:
         logging.error(f"Error loading data: {e}")
@@ -84,7 +101,7 @@ if __name__ == '__main__':
     # Step 4: Initial Data Exploration
     try:
         logging.info("Exploring data distributions...")
-        for feature in ['speech_date', 'year', 'time', 'gender', 'party_group']:
+        for feature in ['speech_date', 'year', 'gender', 'party_group']:
             if feature in df.columns:
                 plot_feature_distribution(df, feature)
         logging.info("Data exploration completed!")
@@ -119,7 +136,11 @@ if __name__ == '__main__':
     # Step 6: Correlation Between Features and Sentiment
     try:
         # Update this list based on the data types checked
-        feature_list = ['year', 'gender', 'party_group']  # Exclude 'Speech_date' and 'time'
+        feature_list = ['year', 'gender', 'party_group']  # Exclude 'speech_date'
+
+        # Check for missing values immediately before calculating correlations
+        if df[feature_list].isnull().any().any():
+            logging.warning("There are still missing values in features used for correlation.")
 
         # Call the function to calculate correlations and plot results
         correlations = calculate_and_plot_correlations(df, feature_list, SENTIMENT_SCORE_COLUMN)
@@ -143,13 +164,7 @@ if __name__ == '__main__':
     # Step 8: Train Topic Models
     try:
         logging.info("Training topic models...")
-        lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text')
-        logging.info("LDA model training completed!")
-
-        # Set n_topics based on DEBUG_MODE
-        # n_topics = 5 if DEBUG_MODE else None  # Set to 5 in DEBUG_MODE, None for full in production
-        topic_model, topics, probs = train_bertopic_model(df['speech'])
-        bertopic_model = topic_model
+        topic_model, topics, probs = train_bertopic_model(df['cleaned_text'])
         df['topic'] = topics
         logging.info("BERTopic model training completed!")
     except Exception as e:
@@ -198,19 +213,18 @@ if __name__ == '__main__':
     # Step 13: Topic Distributions Across Political Parties and Speakers
     try:
         logging.info("Analyzing topic distributions across parties and speakers...")
-        analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
+        analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'])
         logging.info("Topic distribution analysis completed!")
     except Exception as e:
         logging.error(f"Error during topic distribution analysis: {e}")
 
-    # Step 14: Explore LLM and Transformers
+    # Step 14: Explore Large Language Models (LLMs)
     try:
-        logging.info("Exploring sentiment analysis with LLMs and transformers...")
-        df = explore_llm_transformers(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
-        logging.info("LLM and transformer exploration completed!")
+        logging.info("Exploring large language models...")
+        explore_llm_transformers(df, TEXT_COLUMN)
+        logging.info("LLM exploration completed!")
     except Exception as e:
         logging.error(f"Error during LLM exploration: {e}")
-        
-    # Final execution time
-    execution_time = time.time() - start_time
-    logging.info(f"Total execution time: {execution_time:.2f} seconds")
+
+    end_time = time.time()  # End the timer
+    logging.info(f"Script completed in {end_time - start_time:.2f} seconds.")
