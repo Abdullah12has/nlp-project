@@ -9,6 +9,7 @@ from sklearn.metrics import accuracy_score, classification_report
 from gensim.models import Word2Vec
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
+import seaborn as sns
 
 def classify_sentiment(df, score_column):
     """
@@ -79,6 +80,42 @@ def train_sentiment_model_with_word2vec(df, text_column, label_column):
     print("Accuracy:", accuracy_score(y_test, y_pred))
     print("Classification Report:")
     print(classification_report(y_test, y_pred))
+    
+def plot_most_common_words(df, sentiment):
+    """Plot the most common words for positive or negative speeches."""
+    text_data = df[df['sentiment'] == sentiment]['cleaned_text']
+    all_words = ' '.join(text_data)
+    words = all_words.split()
+    
+    # Count words and get the most common ones
+    word_counts = Counter(words)
+    most_common = word_counts.most_common(10)
+
+    # Unzip the word counts
+    words, counts = zip(*most_common)
+
+    # Create bar chart
+    plt.figure(figsize=(10, 5))
+    plt.bar(words, counts)
+    plt.title(f'Most Common Words in {sentiment.capitalize()} Speeches')
+    plt.xlabel('Words')
+    plt.ylabel('Frequency')
+    plt.xticks(rotation=45)
+    plt.show()
+    
+def calculate_correlation(df, feature_list, sentiment_column):
+    """Calculate correlations and plot distributions."""
+    correlations = df[feature_list + [sentiment_column]].corr()
+
+    # Plot distribution of sentiment across features
+    for feature in feature_list:
+        plt.figure(figsize=(10, 5))
+        sns.histplot(data=df, x=feature, hue=sentiment_column, multiple="stack", bins=30)
+        plt.title(f'Distribution of {sentiment_column} by {feature}')
+        plt.show()
+
+    return correlations
+
 
 # Example usage:
 # df = pd.read_csv("path/to/your/data/senti_df.csv")  # Load your DataFrame

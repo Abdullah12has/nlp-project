@@ -1,5 +1,6 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+import logging
 
 def plot_correlation_heatmap(df, sentiment_columns):
     correlation_matrix = df[sentiment_columns].corr()
@@ -28,5 +29,28 @@ def correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topi
     plt.xticks(rotation=45)
     plt.show()
 
+
+def calculate_and_plot_correlations(df, feature_list, sentiment_column):
+    """Calculate correlations between specified features and sentiment column, and plot results."""
+    correlation_results = {}
+    
+    # Calculate correlations
+    logging.info("Calculating correlations...")
+    for feature in feature_list:
+        if feature in df.columns:
+            correlation_results[feature] = df[sentiment_column].corr(df[feature])
+    logging.info(f"Correlations calculated: {correlation_results}")
+
+    # Plot correlation results
+    plt.figure(figsize=(10, 6))
+    plt.bar(correlation_results.keys(), correlation_results.values())
+    plt.title('Correlation with Sentiment Score')
+    plt.ylabel('Correlation Coefficient')
+    plt.xlabel('Features')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+    return correlation_results
 # Example usage:
 # plot_correlation_heatmap(df, ['afinn_sentiment', 'jockers_sentiment', 'nrc_sentiment'])
