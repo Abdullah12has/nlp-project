@@ -9,6 +9,7 @@ from scripts.sentiment_analysis import (
     generate_wordcloud,
     ngram_analysis,
     plot_most_common_words,
+    plot_most_common_words_with_filter,
     plot_ngram_analysis,
     train_sentiment_model_with_word2vec,
     train_sentiment_model_with_bert,
@@ -173,7 +174,13 @@ if __name__ == '__main__':
         # plot_ngram_analysis(trigramPositive, "Top 10 Trigrams in Positive Speeches")
         # plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
 
-        # print(df['gender'])
+
+        plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=0)
+        plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=0)
+
+        plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=1)
+        plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=1)
+
 
         male_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=0) #male == 0 female == 1
         male_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=0) #male == 0 female == 1

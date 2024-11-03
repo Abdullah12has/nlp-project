@@ -347,3 +347,47 @@ def filtered_ngram_analysis(df, sentiment, n=2, feature=None, filter_value=None,
     except Exception as e:
         logging.error(f"Error in filtered_ngram_analysis: {e}")
         return []
+    
+
+
+def plot_most_common_words_with_filter(df, sentiment, feature=None, filter_value=None):
+    """
+    Plot the most common words for positive or negative speeches,
+    optionally filtered by a specified feature and filter value.
+    
+    Parameters:
+    - df: DataFrame containing the data
+    - sentiment: The sentiment type ('positive' or 'negative') to filter by
+    - feature: Optional feature to filter by (e.g., 'gender', 'party_group')
+    - filter_value: The specific value of the feature to filter on (e.g., 'Male' for gender)
+    """
+    # Filter by sentiment and optional feature and filter value
+    if feature and filter_value:
+        filtered_df = df[(df['sentiment'] == sentiment) & (df[feature] == filter_value)]
+    else:
+        filtered_df = df[df['sentiment'] == sentiment]
+
+    # Check if there's data to plot
+    if filtered_df.empty:
+        print(f"No data found for sentiment='{sentiment}' with {feature}='{filter_value}'")
+        return
+
+    # Concatenate all text in the filtered data and calculate word frequency
+    text_data = filtered_df['cleaned_text']
+    all_words = ' '.join(text_data)
+    words = all_words.split()
+    word_counts = Counter(words)
+    most_common = word_counts.most_common(10)
+
+    # Prepare data for plotting
+    words, counts = zip(*most_common)
+    plt.figure(figsize=(10, 5))
+    plt.bar(words, counts)
+    title = f"Most Common Words in {sentiment.capitalize()} Speeches. {feature} ({filter_value})"
+    if feature and filter_value:
+        title += f" ({feature} = {filter_value})"
+    plt.title(title)
+    plt.xlabel('Words')
+    plt.ylabel('Frequency')
+    plt.xticks(rotation=45)
+    plt.show()
