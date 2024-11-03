@@ -132,9 +132,9 @@ if __name__ == '__main__':
     # # Step 5: Initial Data Exploration
     # try:
     #     logging.info("Exploring data distributions...")
-    #     for feature in ['speech_date', 'year', 'time', 'gender', 'party_group']:
-    #         if feature in df.columns:
-    #             plot_feature_distribution(df, feature)
+       
+    #     plot_feature_distribution(df)
+
     #     logging.info("Data exploration completed!")
     # except Exception as e:
     #     logging.error(f"Error during data exploration: {e}")
@@ -162,12 +162,12 @@ if __name__ == '__main__':
         logging.info("Word frequency and sentiment analysis completed!")
 
         logging.info("Running bi-gram analysis...") 
-        bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
-        bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
+        # bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
+        # bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
 
-        logging.info("Running tri-gram analysis...") 
-        trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
-        trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
+        # logging.info("Running tri-gram analysis...") 
+        # trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
+        # trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
 
         # plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
         # plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
