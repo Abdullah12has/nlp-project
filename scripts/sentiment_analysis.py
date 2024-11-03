@@ -284,3 +284,15 @@ def analyze_and_visualize_ngrams(df, sentiment_type='positive', n_range=(2,3)):
             print(f"{''.join(gram)}: {count}")
     
     return results
+
+
+def plot_ngram_analysis(ngram_data, title):
+    """Plots the most common n-grams from the given ngram_data."""
+    ngrams, counts = zip(*ngram_data)  # Unzip the ngrams and counts
+    plt.figure(figsize=(10, 6))
+    plt.barh(ngrams, counts, color='skyblue')
+    plt.gca().invert_yaxis()  # Reverse the order so the highest frequency is at the top
+    plt.title(title)
+    plt.xlabel('Frequency')
+    plt.ylabel('N-grams')
+    plt.show()

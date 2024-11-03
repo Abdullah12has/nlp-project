@@ -8,6 +8,7 @@ from scripts.sentiment_analysis import (
     generate_wordcloud,
     ngram_analysis,
     plot_most_common_words,
+    plot_ngram_analysis,
     train_sentiment_model_with_word2vec,
     train_sentiment_model_with_bert,
     analyze_and_visualize_ngrams
@@ -147,14 +148,14 @@ if __name__ == '__main__':
         else:
             logging.error("Sentiment classification failed to produce summary")
         
-        generate_wordcloud(df, 'positive')
-        generate_wordcloud(df, 'negative')
+        # generate_wordcloud(df, 'positive')
+        # generate_wordcloud(df, 'negative')
 
         # Plot most common words for each sentiment
         logging.info("Plotting most common words for positive speeches...")
-        plot_most_common_words(df, 'positive')
+        # plot_most_common_words(df, 'positive')
         logging.info("Plotting most common words for negative speeches...")
-        plot_most_common_words(df, 'negative')
+        # plot_most_common_words(df, 'negative')
     
         logging.info("Word frequency and sentiment analysis completed!")
 
@@ -166,13 +167,12 @@ if __name__ == '__main__':
         trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
         trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
 
+        plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
+        plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
+        plot_ngram_analysis(trigramPositive, "Top 10 Trigrams in Positive Speeches")
+        plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
+
         
-
-
-
-
-
-
 
 
         # for feature in ['party_group', 'gender']:
