@@ -1,4 +1,5 @@
 from collections import Counter
+import logging
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -296,3 +297,53 @@ def plot_ngram_analysis(ngram_data, title):
     plt.xlabel('Frequency')
     plt.ylabel('N-grams')
     plt.show()
+
+
+
+def filtered_ngram_analysis(df, sentiment, n=2, feature=None, filter_value=None, top_n=10):
+    """
+    Performs n-gram analysis on a filtered subset of data based on a specified feature and filter value.
+    
+    Parameters:
+    - df: DataFrame containing the data
+    - sentiment: The sentiment type ('positive' or 'negative') to filter by
+    - n: The n-gram size (e.g., 2 for bigrams, 3 for trigrams)
+    - feature: Optional feature to filter by (e.g., 'gender', 'party_group')
+    - filter_value: The specific value of the feature to filter on (e.g., 'Male' for gender)
+    - top_n: The number of top n-grams to return and plot
+    
+    Returns:
+    - top_ngrams: List of top n-grams and their counts
+    """
+    try:
+        # Filter by sentiment and the specified feature value
+        if feature and filter_value:
+          
+            filtered_df = df[(df['sentiment'] == sentiment) & (df[feature] == filter_value)]
+            logging.debug(f"Filtered DataFrame size: {filtered_df.shape[0]} rows")
+        else:
+            filtered_df = df[df['sentiment'] == sentiment]
+            logging.debug(f"Filtered DataFrame size without feature filter: {filtered_df.shape[0]} rows")
+        
+        # Check if filtered DataFrame is empty
+        if filtered_df.empty:
+            logging.warning(f"No data found for sentiment='{sentiment}' with {feature}='{filter_value}'")
+            return []
+        
+        # Perform n-gram analysis on the filtered data
+        top_ngrams = ngram_analysis(filtered_df, sentiment, n)
+        
+        # Check if ngram_analysis returned empty results
+        if not top_ngrams:
+            logging.warning(f"No n-grams found for sentiment='{sentiment}' with {feature}='{filter_value}'")
+            return []
+        
+        # Plot the results
+        title = f"Top {n}-grams in {sentiment.capitalize()} Speeches ({feature} = {filter_value})" if feature else f"Top {n}-grams in {sentiment.capitalize()} Speeches"
+        plot_ngram_analysis(top_ngrams, title)
+        
+        return top_ngrams
+    
+    except Exception as e:
+        logging.error(f"Error in filtered_ngram_analysis: {e}")
+        return []

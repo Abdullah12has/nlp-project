@@ -5,6 +5,7 @@ from scripts.text_preprocessing import TextPreprocessor
 from scripts.data_exploration import plot_feature_distribution
 from scripts.sentiment_analysis import (
     classify_sentiment,
+    filtered_ngram_analysis,
     generate_wordcloud,
     ngram_analysis,
     plot_most_common_words,
@@ -167,13 +168,25 @@ if __name__ == '__main__':
         trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
         trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
 
-        plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
-        plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
-        plot_ngram_analysis(trigramPositive, "Top 10 Trigrams in Positive Speeches")
-        plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
+        # plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
+        # plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
+        # plot_ngram_analysis(trigramPositive, "Top 10 Trigrams in Positive Speeches")
+        # plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
 
-        
+        # print(df['gender'])
 
+        male_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=0) #male == 0 female == 1
+        male_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=0) #male == 0 female == 1
+
+        male_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+        male_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+
+
+
+        female_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=1) #male == 0 female == 1
+        female_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=1) #male == 0 female == 1
+        female_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=1) #male == 0 female == 1
+        female_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=1) #male == 0 female == 1
 
         # for feature in ['party_group', 'gender']:
         #     ngram_analysis(df, 'positive', feature=feature)
