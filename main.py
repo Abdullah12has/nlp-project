@@ -175,25 +175,55 @@ if __name__ == '__main__':
         # plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
 
 
-        plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=0)
-        plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=0)
+        # plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=0)
+        # plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=0)
 
-        plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=1)
-        plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=1)
-
-
-        male_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=0) #male == 0 female == 1
-        male_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=0) #male == 0 female == 1
-
-        male_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=0) #male == 0 female == 1
-        male_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+        # plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=1)
+        # plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=1)
 
 
+        # male_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=0) #male == 0 female == 1
+        # male_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=0) #male == 0 female == 1
 
-        female_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=1) #male == 0 female == 1
-        female_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=1) #male == 0 female == 1
-        female_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=1) #male == 0 female == 1
-        female_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=1) #male == 0 female == 1
+        # male_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+        # male_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+
+
+
+        # female_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=1) #male == 0 female == 1
+        # female_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=1) #male == 0 female == 1
+        # female_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=1) #male == 0 female == 1
+        # female_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=1) #male == 0 female == 1
+
+        # print(df['party_group'])
+        # Consertive == 0. Labour == 1.  Independant  == 2.
+        # plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=0)
+        # plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=0)
+
+        # plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=1)
+        # plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=1)
+
+        # plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=2)
+        # plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=2)
+
+        # filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=0)
+        # filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=0)
+        # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=0)
+        # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=0)
+
+        # filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=1)
+        # filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=1)
+        # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=1)
+        # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=1)
+
+        # filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=2)
+        # filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=2)
+        # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=2)
+        # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=2)
+
+
+
+
 
         # for feature in ['party_group', 'gender']:
         #     ngram_analysis(df, 'positive', feature=feature)
