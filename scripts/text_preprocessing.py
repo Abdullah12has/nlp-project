@@ -34,7 +34,7 @@ class TextPreprocessor:
         text = re.sub(r'[^a-zA-Z\s]', '', text.lower())
         # Tokenize and lemmatize
         tokens = [self.lemmatizer.lemmatize(word) for word in text.split() if word not in self.stop_words]
-        return ' '.join(tokens)
+        return ', '.join(tokens)
 
 # Example usage:
 # preprocessor = TextPreprocessor()
