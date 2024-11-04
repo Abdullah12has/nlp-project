@@ -145,169 +145,166 @@ if __name__ == '__main__':
     #     logging.error(f"Error during data exploration: {e}")
 
     # Step 6: Speech Word Frequency Analysis
-    # try:
-    #     logging.info("Classifying sentiment and analyzing word frequencies...")
-    #     df, sentiment_summary = classify_sentiment(df)
-    #     if sentiment_summary:
-    #         logging.info("Sentiment Classification Summary:")
-    #         for key, value in sentiment_summary.items():
-    #             logging.info(f"{key}: {value}")
-    #     else:
-    #         logging.error("Sentiment classification failed to produce summary")
+#     try:
+#         logging.info("Classifying sentiment and analyzing word frequencies...")
+#         df, sentiment_summary = classify_sentiment(df)
+#         if sentiment_summary:
+#             logging.info("Sentiment Classification Summary:")
+#             for key, value in sentiment_summary.items():
+#                 logging.info(f"{key}: {value}")
+#         else:
+#             logging.error("Sentiment classification failed to produce summary")
         
-        # generate_wordcloud(df, 'positive')
-        # generate_wordcloud(df, 'negative')
+#         generate_wordcloud(df, 'positive')
+#         generate_wordcloud(df, 'negative')
 
-        # Plot most common words for each sentiment
-        # logging.info("Plotting most common words for positive speeches...")
-        # plot_most_common_words(df, 'positive')
-        # logging.info("Plotting most common words for negative speeches...")
-        # plot_most_common_words(df, 'negative')
+#         # Plot most common words for each sentiment
+#         logging.info("Plotting most common words for positive speeches...")
+#         plot_most_common_words(df, 'positive')
+#         logging.info("Plotting most common words for negative speeches...")
+#         plot_most_common_words(df, 'negative')
     
-        # logging.info("Word frequency and sentiment analysis completed!")
+#         logging.info("Word frequency and sentiment analysis completed!")
 
-        # logging.info("Running bi-gram analysis...") 
-        # bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
-        # bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
+#         logging.info("Running bi-gram analysis...") 
+#         bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
+#         bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
 
-        # logging.info("Running tri-gram analysis...") 
-        # trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
-        # trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
+#         logging.info("Running tri-gram analysis...") 
+#         trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
+#         trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
 
-        # plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
-        # plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
-        # plot_ngram_analysis(trigramPositive, "Top 10 Trigrams in Positive Speeches")
-        # plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
-
-
-        # plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=0)
-        # plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=0)
-
-        # plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=1)
-        # plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=1)
+#         plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
+#         plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
+#         plot_ngram_analysis(trigramPositive, "Top 10 Trigrams in Positive Speeches")
+#         plot_ngram_analysis(trigramNegative, "Top 10 Trigrams in Negative Speeches")
 
 
-        # male_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=0) #male == 0 female == 1
-        # male_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=0) #male == 0 female == 1
+#         plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=0)
+#         plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=0)
 
-        # male_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=0) #male == 0 female == 1
-        # male_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+#         plot_most_common_words_with_filter(df, 'positive', feature='gender', filter_value=1)
+#         plot_most_common_words_with_filter(df, 'negative', feature='gender', filter_value=1)
+
+
+#         male_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=0) #male == 0 female == 1
+#         male_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=0) #male == 0 female == 1
+
+#         male_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=0) #male == 0 female == 1
+#         male_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=0) #male == 0 female == 1
 
 
 
-        # female_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=1) #male == 0 female == 1
-        # female_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=1) #male == 0 female == 1
-        # female_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=1) #male == 0 female == 1
-        # female_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=1) #male == 0 female == 1
+#         female_positive_bigrams = filtered_ngram_analysis(df, 'positive', n=2, feature="gender", filter_value=1) #male == 0 female == 1
+#         female_negative_bigrams = filtered_ngram_analysis(df, 'negative', n=2, feature="gender", filter_value=1) #male == 0 female == 1
+#         female_positive_trigrams = filtered_ngram_analysis(df, 'positive', n=3, feature="gender", filter_value=1) #male == 0 female == 1
+#         female_negative_trigrams = filtered_ngram_analysis(df, 'negative', n=3, feature="gender", filter_value=1) #male == 0 female == 1
 
-        # print(df['party_group'])
-        # Consertive == 0. Labour == 1.  Independant  == 2.
-        # plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=0)
-        # plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=0)
+#         print(df['party_group'])
+#         # Consertive == 0. Labour == 1.  Independant  == 2.
+#         plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=0)
+#         plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=0)
 
-        # plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=1)
-        # plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=1)
+#         plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=1)
+#         plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=1)
 
-        # plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=2)
-        # plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=2)
+#         plot_most_common_words_with_filter(df, 'positive', feature='party_group', filter_value=2)
+#         plot_most_common_words_with_filter(df, 'negative', feature='party_group', filter_value=2)
 
-        # filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=0)
-        # filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=0)
-        # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=0)
-        # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=0)
+#         filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=0)
+#         filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=0)
+#         filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=0)
+#         filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=0)
 
-        # filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=1)
-        # filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=1)
-        # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=1)
-        # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=1)
+#         filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=1)
+#         filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=1)
+#         filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=1)
+#         filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=1)
 
-        # filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=2)
-        # filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=2)
-        # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=2)
-        # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=2)
+#         filtered_ngram_analysis(df, 'positive', n=2, feature="party_group", filter_value=2)
+#         filtered_ngram_analysis(df, 'negative', n=2, feature="party_group", filter_value=2)
+#         filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=2)
+#         filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=2)
 
-        # for feature in ['party_group', 'gender']:
-        #     ngram_analysis(df, 'positive', feature=feature)
-        #     ngram_analysis(df, 'negative', feature=feature)
 
-        # logging.info("Word frequency and n-gram analysis completed!")
+#         logging.info("Word frequency and n-gram analysis completed!")
         
-    # except Exception as e:
-    #     logging.error(f"Error during sentiment classification or analysis: {e}")
+#     except Exception as e:
+#         logging.error(f"Error during sentiment classification or analysis: {e}")
 
-    # Step 7: Correlation Between Features and Sentiment
-    '''
-4. Correlation Between Features and Sentiment: Calculate the correlation between sentiment scores and features of
-Speech_date, year, time, gender and party_group and analyze whether a certain feature (e.g., Male, Labour and …) tend to be
-positive or negative. Plot the distribution plots for positive and negative reviews to explore potential patterns.
-    '''
-    # try:
-    #     logging.info("Classifying sentiment...")
-    #     df, summary = classify_sentiment(df)    
-    #     # Drop rows with NaN in key columns before correlation analysis
-    #     df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
+#     # Step 7: Correlation Between Features and Sentiment
+#     '''
+#     4. Correlation Between Features and Sentiment: Calculate the correlation between sentiment scores and features of
+#     Speech_date, year, time, gender and party_group and analyze whether a certain feature (e.g., Male, Labour and …) tend to be
+#     positive or negative. Plot the distribution plots for positive and negative reviews to explore potential patterns.
+#     '''
+#     try:
+#         logging.info("Classifying sentiment...")
+#         df, summary = classify_sentiment(df)    
+#         # Drop rows with NaN in key columns before correlation analysis
+#         df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
         
-    #     # Define features to analyze
-    #     features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
-    #     sentiment_column = 'sentiment_confidence'
-    #     sentiment_label_column = 'sentiment'
+#         # Define features to analyze
+#         features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
+#         sentiment_column = 'sentiment_confidence'
+#         sentiment_label_column = 'sentiment'
         
-    #     # Calculate and plot correlations including sentiment classification
-    #     correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
+#         # Calculate and plot correlations including sentiment classification
+#         correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
         
-    #     # Plot sentiment distribution for each categorical feature
-    #     categorical_features = ['gender', 'party_group']
-    #     for feature in categorical_features:
-    #         plot_sentiment_distribution(df, feature, sentiment_label_column)
+#         # Plot sentiment distribution for each categorical feature
+#         categorical_features = ['gender', 'party_group']
+#         for feature in categorical_features:
+#             plot_sentiment_distribution(df, feature, sentiment_label_column)
         
-    #     logging.info("Correlation analysis completed successfully.")
-    # except Exception as e:
-    #     logging.error(f"Error during correlation analysis: {e}")
+#         logging.info("Correlation analysis completed successfully.")
+#     except Exception as e:
+#         logging.error(f"Error during correlation analysis: {e}")
         
-  # # Step 8: Correlation Heatmap
-    # try:
-    #     logging.info("Calculating and plotting correlation heatmap...")
-    #     sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
-    #     if all(col in df.columns for col in sentiment_columns):
-    #         plot_correlation_heatmap(df, sentiment_columns)
-    #     else:
-    #         logging.warning("Some sentiment columns are missing; skipping correlation heatmap.")
-    # except Exception as e:
-    #     logging.error(f"Error during correlation analysis: {e}")
+#   # # Step 8: Correlation Heatmap
+#     try:
+#         logging.info("Calculating and plotting correlation heatmap...")
+#         sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
+#         if all(col in df.columns for col in sentiment_columns):
+#             plot_correlation_heatmap(df, sentiment_columns)
+#         else:
+#             logging.warning("Some sentiment columns are missing; skipping correlation heatmap.")
+#     except Exception as e:
+#         logging.error(f"Error during correlation analysis: {e}")
 
-    # # Step 9: Train Topic Models
-    '''
-Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BERTopic and then optimize
-hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
-visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
-    '''
-    try:
-        # logging.info("Training topic models...")
-        lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
-        # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
-        # pyLDAvis.display(vis)
-        # logging.info("LDA model training completed!")
-        print(ldatopics)
+#     # # Step 9: Train Topic Models
+#     '''
+#     Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BERTopic and then optimize
+#     hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
+#     visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
+#     '''
+#     try:
+#         logging.info("Training topic models...")
+#         lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+#         pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
+#         pyLDAvis.display(vis)
+#         logging.info("LDA model training completed!")
+#         print(ldatopics)
 
-        logging.info("Starting BERTopic model training...")
+#         logging.info("Starting BERTopic model training...")
         
-        # Train BERTopic model with savepoints
-        bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+#         # Train BERTopic model with savepoints
+#         bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
-        print(topics)
-        # Save topics to DataFrame
-        df['topic'] = topics
-        logging.info("BERTopic model training completed!")
+#         print(topics)
+#         # Save topics to DataFrame
+#         df['topic'] = topics
+#         logging.info("BERTopic model training completed!")
 
-        # Visualization
-        logging.info("Generating visualizations for BERTopic...")
-        bertopic_model.visualize_topics().show()  # General topic visualization
-        bertopic_model.visualize_hierarchy().show()  # Topic hierarchy
-        bertopic_model.visualize_heatmap().show()  # Topic similarity heatmap
-        bertopic_model.visualize_barchart().show()  # Topic frequency barchart
+#         # Visualization
+#         logging.info("Generating visualizations for BERTopic...")
+#         bertopic_model.visualize_topics().show()  # General topic visualization
+#         bertopic_model.visualize_hierarchy().show()  # Topic hierarchy
+#         bertopic_model.visualize_heatmap().show()  # Topic similarity heatmap
+#         bertopic_model.visualize_barchart().show()  # Topic frequency barchart
 
-    except Exception as e:
-        logging.error(f"Error during topic modeling: {e}")
+#     except Exception as e:
+#         logging.error(f"Error during topic modeling: {e}")
 
 
     '''
@@ -317,19 +314,19 @@ visualization tools like pyLDAvis and BERTopic's built-in functions for interact
 
     # Step 10: Analyze Topic Evolution
 
-    try:
-        logging.info("Analyzing topic evolution over time...")
-        if 'topic' in df.columns:
-            topic_evolution_over_time(df, topic_column='topic', time_column='year')
-            logging.info("Topic evolution analysis completed!")
+    # try:
+    #     logging.info("Analyzing topic evolution over time...")
+    #     if 'topic' in df.columns:
+    #         topic_evolution_over_time(df, topic_column='topic', time_column='year')
+    #         logging.info("Topic evolution analysis completed!")
 
-            logging.info("Visualizing topic trends...")
-            visualize_topic_trends(df, topic_column='topic', time_column='year')
-            logging.info("Topic trends visualization completed!")
-        else:
-            logging.error("The 'topic' column is missing; cannot analyze topic evolution.")
-    except Exception as e:
-        logging.error(f"Error during topic evolution analysis: {e}")
+    #         logging.info("Visualizing topic trends...")
+    #         visualize_topic_trends(df, topic_column='topic', time_column='year')
+    #         logging.info("Topic trends visualization completed!")
+    #     else:
+    #         logging.error("The 'topic' column is missing; cannot analyze topic evolution.")
+    # except Exception as e:
+    #     logging.error(f"Error during topic evolution analysis: {e}")
 
     # # Step 11: Sentiment Correlation with Topics
     # try:
