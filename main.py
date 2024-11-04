@@ -53,7 +53,7 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/data.csv'
+DATA_PATH = 'data/senti_df_main.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -340,12 +340,12 @@ if __name__ == '__main__':
         # Analyze Topic Trends for LDA
         logging.info("Analyzing LDA topic trends over time...")
         lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
-        visualize_topic_trends_over_time(lda_topic_trends)
+        visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
         logging.info("LDA topic trend visualization completed.")
         # Analyze Topic Trends for BERTopic
         logging.info("Analyzing BERTopic trends over time...")
         bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
-        visualize_topic_trends_over_time(bertopic_trends)
+        visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
         logging.info("BERTopic topic trend visualization completed.")
         logging.info("Topic evolution analysis completed successfully.")
     except Exception as e:

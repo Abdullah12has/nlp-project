@@ -229,8 +229,12 @@ def train_bertopic_model_over_time(documents, checkpoint_path="progress/bertopic
 
     return topic_model, topics, probs
 
-def visualize_topic_trends_over_time(topic_trends, title='Topic Trends Over Time'):
-    """Visualize the topic trends over time."""
+def visualize_topic_trends_over_time(topic_trends, title='Topic Trends Over Time', save_path='data/topic_trends_over_time.png'):
+    """Save the topic trends over time plot to a file."""
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    
+    # Create the plot
     plt.figure(figsize=(12, 6))
     sns.lineplot(data=topic_trends)
     plt.title(title)
@@ -239,8 +243,13 @@ def visualize_topic_trends_over_time(topic_trends, title='Topic Trends Over Time
     plt.legend(title='Topics')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.show()
+    
+    # Save the plot
+    plt.savefig(save_path)
+    plt.close()  # Close the plot to prevent it from displaying
+    print(f"Plot saved to '{save_path}'")
 
+    
 def analyze_topic_evolution(df, topic_column='topic', time_column='year'):
     """Analyze topic distribution over time."""
     topic_counts = df.groupby([time_column, topic_column]).size().reset_index(name='counts')
