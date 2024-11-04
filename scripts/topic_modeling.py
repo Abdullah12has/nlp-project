@@ -12,25 +12,33 @@ import pickle
 import os
 
 
-def save_checkpoint(model, dictionary, corpus, num_topics, coherence, path="progress/lda_checkpoint.pkl"):
-    """Save checkpoint of the current best LDA model and metadata."""
-    with open(path, 'wb') as f:
-        pickle.dump({
-            'model': model,
-            'dictionary': dictionary,
-            'corpus': corpus,
-            'num_topics': num_topics,
-            'coherence': coherence
-        }, f)
 
-def load_checkpoint(path="progress/lda_checkpoint.pkl"):
-    """Load checkpoint if it exists."""
-    if os.path.exists(path):
-        with open(path, 'rb') as f:
-            checkpoint = pickle.load(f)
-        print(f"Loaded checkpoint with {checkpoint['num_topics']} topics and coherence score {checkpoint['coherence']:.4f}")
-        return checkpoint
+def save_checkpoint(model, dictionary, corpus, num_topics, coherence, checkpoint_path):
+    """Save checkpoint for the model."""
+    checkpoint = {
+        'model': model,
+        'dictionary': dictionary,
+        'corpus': corpus,
+        'num_topics': num_topics,
+        'coherence': coherence
+    }
+    with open(checkpoint_path, 'wb') as f:
+        pickle.dump(checkpoint, f)
+
+def load_checkpoint(checkpoint_path):
+    """Load checkpoint if available."""
+    if os.path.exists(checkpoint_path):
+        with open(checkpoint_path, 'rb') as f:
+            return pickle.load(f)
     return None
+
+def extract_topics(lda_model, num_words=10):
+    """Extract topics from LDA model as lists of words with their probabilities."""
+    topics = []
+    for topic_id, topic in lda_model.show_topics(formatted=False, num_words=num_words):
+        topic_words = {word: prob for word, prob in topic}
+        topics.append((topic_id, topic_words))
+    return topics
 
 def train_lda_model(
     df: pd.DataFrame, 
@@ -53,9 +61,10 @@ def train_lda_model(
         checkpoint_path (str): Path to the checkpoint file.
 
     Returns:
-        tuple: (best_model, dictionary, corpus, vis) with best model, dictionary, 
-               corpus, and visualization object.
+        tuple: (best_model, dictionary, corpus, vis, topics) with best model, dictionary, 
+               corpus, visualization object, and list of topics.
     """
+    
     # Prepare the data
     texts = df[text_column].apply(lambda x: x.split())
     dictionary = Dictionary(texts)
@@ -96,6 +105,9 @@ def train_lda_model(
 
     print(f"Best LDA model with {best_num_topics} topics and coherence score of {best_coherence:.4f}")
 
+    # Extract topics
+    topics = extract_topics(best_model)
+
     # Visualization
     vis = None
     try:
@@ -103,7 +115,8 @@ def train_lda_model(
     except Exception as e:
         print(f"Visualization failed: {e}")
 
-    return best_model, dictionary, corpus, vis
+    return best_model, dictionary, corpus, vis, topics
+
 
 
 

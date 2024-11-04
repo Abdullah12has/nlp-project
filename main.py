@@ -241,28 +241,28 @@ if __name__ == '__main__':
 Speech_date, year, time, gender and party_group and analyze whether a certain feature (e.g., Male, Labour and …) tend to be
 positive or negative. Plot the distribution plots for positive and negative reviews to explore potential patterns.
     '''
-    try:
-        logging.info("Classifying sentiment...")
-        df, summary = classify_sentiment(df)    
-        # Drop rows with NaN in key columns before correlation analysis
-        df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
+    # try:
+    #     logging.info("Classifying sentiment...")
+    #     df, summary = classify_sentiment(df)    
+    #     # Drop rows with NaN in key columns before correlation analysis
+    #     df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
         
-        # Define features to analyze
-        features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
-        sentiment_column = 'sentiment_confidence'
-        sentiment_label_column = 'sentiment'
+    #     # Define features to analyze
+    #     features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
+    #     sentiment_column = 'sentiment_confidence'
+    #     sentiment_label_column = 'sentiment'
         
-        # Calculate and plot correlations including sentiment classification
-        correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
+    #     # Calculate and plot correlations including sentiment classification
+    #     correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
         
-        # Plot sentiment distribution for each categorical feature
-        categorical_features = ['gender', 'party_group']
-        for feature in categorical_features:
-            plot_sentiment_distribution(df, feature, sentiment_label_column)
+    #     # Plot sentiment distribution for each categorical feature
+    #     categorical_features = ['gender', 'party_group']
+    #     for feature in categorical_features:
+    #         plot_sentiment_distribution(df, feature, sentiment_label_column)
         
-        logging.info("Correlation analysis completed successfully.")
-    except Exception as e:
-        logging.error(f"Error during correlation analysis: {e}")
+    #     logging.info("Correlation analysis completed successfully.")
+    # except Exception as e:
+    #     logging.error(f"Error during correlation analysis: {e}")
         
   # # Step 8: Correlation Heatmap
     # try:
@@ -281,52 +281,55 @@ Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BER
 hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
 visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
     '''
-    # try:
-    #     # logging.info("Training topic models...")
-    #     # lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 10, 10)
-    #     # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
-    #     # pyLDAvis.display(vis)
-    #     # logging.info("LDA model training completed!")
+    try:
+        # logging.info("Training topic models...")
+        lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+        # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
+        # pyLDAvis.display(vis)
+        # logging.info("LDA model training completed!")
+        print(ldatopics)
 
-    #     logging.info("Starting BERTopic model training...")
+        logging.info("Starting BERTopic model training...")
         
-    #     # Train BERTopic model with savepoints
-    #     bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+        # Train BERTopic model with savepoints
+        bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
-    #     # Save topics to DataFrame
-    #     df['topic'] = topics
-    #     logging.info("BERTopic model training completed!")
+        print(topics)
+        # Save topics to DataFrame
+        df['topic'] = topics
+        logging.info("BERTopic model training completed!")
 
-    #     # Visualization
-    #     logging.info("Generating visualizations for BERTopic...")
-    #     bertopic_model.visualize_topics().show()  # General topic visualization
-    #     bertopic_model.visualize_hierarchy().show()  # Topic hierarchy
-    #     bertopic_model.visualize_heatmap().show()  # Topic similarity heatmap
-    #     bertopic_model.visualize_barchart().show()  # Topic frequency barchart
+        # Visualization
+        logging.info("Generating visualizations for BERTopic...")
+        bertopic_model.visualize_topics().show()  # General topic visualization
+        bertopic_model.visualize_hierarchy().show()  # Topic hierarchy
+        bertopic_model.visualize_heatmap().show()  # Topic similarity heatmap
+        bertopic_model.visualize_barchart().show()  # Topic frequency barchart
 
-    # except Exception as e:
-    #     logging.error(f"Error during topic modeling: {e}")
+    except Exception as e:
+        logging.error(f"Error during topic modeling: {e}")
 
 
-'''
-6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopic’s
-time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
-'''
+    '''
+    6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopic’s
+    time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
+    '''
 
-    # # Step 10: Analyze Topic Evolution
-    # try:
-    #     logging.info("Analyzing topic evolution over time...")
-    #     if 'topic' in df.columns:
-    #         topic_evolution_over_time(df, topic_column='topic', time_column='year')
-    #         logging.info("Topic evolution analysis completed!")
+    # Step 10: Analyze Topic Evolution
 
-    #         logging.info("Visualizing topic trends...")
-    #         visualize_topic_trends(df, topic_column='topic', time_column='year')
-    #         logging.info("Topic trends visualization completed!")
-    #     else:
-    #         logging.error("The 'topic' column is missing; cannot analyze topic evolution.")
-    # except Exception as e:
-    #     logging.error(f"Error during topic evolution analysis: {e}")
+    try:
+        logging.info("Analyzing topic evolution over time...")
+        if 'topic' in df.columns:
+            topic_evolution_over_time(df, topic_column='topic', time_column='year')
+            logging.info("Topic evolution analysis completed!")
+
+            logging.info("Visualizing topic trends...")
+            visualize_topic_trends(df, topic_column='topic', time_column='year')
+            logging.info("Topic trends visualization completed!")
+        else:
+            logging.error("The 'topic' column is missing; cannot analyze topic evolution.")
+    except Exception as e:
+        logging.error(f"Error during topic evolution analysis: {e}")
 
     # # Step 11: Sentiment Correlation with Topics
     # try:
