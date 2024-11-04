@@ -17,9 +17,12 @@ from scripts.sentiment_analysis import (
 )
 from scripts.sentiment_correlation import (
     plot_correlation_heatmap,
-    correlate_sentiment_with_topics,
     calculate_and_plot_correlations,
-    encode_categorical_features
+    encode_categorical_features,
+    plot_sentiment_distribution,
+    perform_pca,
+    clean_numeric_columns,
+    identify_non_numeric_values
 )
 from scripts.topic_modeling import (
     train_lda_model,
@@ -140,28 +143,28 @@ if __name__ == '__main__':
     #     logging.error(f"Error during data exploration: {e}")
 
     # Step 6: Speech Word Frequency Analysis
-    try:
-        logging.info("Classifying sentiment and analyzing word frequencies...")
-        df, sentiment_summary = classify_sentiment(df)
-        if sentiment_summary:
-            logging.info("Sentiment Classification Summary:")
-            for key, value in sentiment_summary.items():
-                logging.info(f"{key}: {value}")
-        else:
-            logging.error("Sentiment classification failed to produce summary")
+    # try:
+    #     logging.info("Classifying sentiment and analyzing word frequencies...")
+    #     df, sentiment_summary = classify_sentiment(df)
+    #     if sentiment_summary:
+    #         logging.info("Sentiment Classification Summary:")
+    #         for key, value in sentiment_summary.items():
+    #             logging.info(f"{key}: {value}")
+    #     else:
+    #         logging.error("Sentiment classification failed to produce summary")
         
         # generate_wordcloud(df, 'positive')
         # generate_wordcloud(df, 'negative')
 
         # Plot most common words for each sentiment
-        logging.info("Plotting most common words for positive speeches...")
+        # logging.info("Plotting most common words for positive speeches...")
         # plot_most_common_words(df, 'positive')
-        logging.info("Plotting most common words for negative speeches...")
+        # logging.info("Plotting most common words for negative speeches...")
         # plot_most_common_words(df, 'negative')
     
-        logging.info("Word frequency and sentiment analysis completed!")
+        # logging.info("Word frequency and sentiment analysis completed!")
 
-        logging.info("Running bi-gram analysis...") 
+        # logging.info("Running bi-gram analysis...") 
         # bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
         # bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
 
@@ -221,33 +224,45 @@ if __name__ == '__main__':
         # filtered_ngram_analysis(df, 'positive', n=3, feature="party_group", filter_value=2)
         # filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=2)
 
-
-
-
-
         # for feature in ['party_group', 'gender']:
         #     ngram_analysis(df, 'positive', feature=feature)
         #     ngram_analysis(df, 'negative', feature=feature)
 
         # logging.info("Word frequency and n-gram analysis completed!")
         
-    except Exception as e:
-        logging.error(f"Error during sentiment classification or analysis: {e}")
-
-    # # Step 7: Correlation Between Features and Sentiment
-    # try:
-    #     # Update this list based on the data types checked
-    #     feature_list = ['year', 'gender', 'party_group']  # Exclude 'Speech_date' and 'time'
-
-    #     # Call the function to calculate correlations and plot results
-    #     correlations = calculate_and_plot_correlations(df, feature_list, SENTIMENT_SCORE_COLUMN)
-
-    #     logging.info(f"Calculated correlations: {correlations}")
-
     # except Exception as e:
-    #     logging.error(f"Error during correlation calculations: {e}")
+    #     logging.error(f"Error during sentiment classification or analysis: {e}")
 
-    # # Step 8: Correlation Heatmap
+    # Step 7: Correlation Between Features and Sentiment
+    try:
+        logging.info("Classifying sentiment...")
+        df, summary = classify_sentiment(df)
+    
+        # Drop rows with NaN in key columns before correlation
+        df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
+
+        # # Perform PCA
+        # pca_results = perform_pca(df[['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']])
+        # if pca_results is not None:
+        #     logging.info("PCA performed successfully.")
+
+        # Calculate correlations and plot results
+        features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
+        sentiment_column = 'sentiment_confidence'
+
+        # Calculate and plot correlations
+        correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column)
+
+        # Plot sentiment distribution for each categorical feature
+        for feature in categorical_features:
+            plot_sentiment_distribution(df, feature, sentiment_column)
+
+        logging.info("Correlation analysis completed successfully.")
+
+    except Exception as e:
+        logging.error(f"Error during correlation analysis: {e}")
+        
+  # # Step 8: Correlation Heatmap
     # try:
     #     logging.info("Calculating and plotting correlation heatmap...")
     #     sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
