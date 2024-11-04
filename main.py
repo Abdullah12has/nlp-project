@@ -48,7 +48,7 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/senti_df.csv'
+DATA_PATH = 'data/data.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -261,8 +261,8 @@ positive or negative. Plot the distribution plots for positive and negative revi
         # correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column)
 
         # Plot sentiment distribution for each categorical feature
-        for feature in categorical_features:
-            plot_sentiment_distribution(df, feature, sentiment_column)
+        # for feature in categorical_features:
+        #     plot_sentiment_distribution(df, feature, sentiment_column)
 
         logging.info("Correlation analysis completed successfully.")
 
@@ -281,21 +281,42 @@ positive or negative. Plot the distribution plots for positive and negative revi
     #     logging.error(f"Error during correlation analysis: {e}")
 
     # # Step 9: Train Topic Models
-    try:
-        logging.info("Training topic models...")
-        lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 10, 10)
-        pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
-        pyLDAvis.display(vis)
-        logging.info("LDA model training completed!")
+    '''
+Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BERTopic and then optimize
+hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
+visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
+    '''
+    # try:
+    #     # logging.info("Training topic models...")
+    #     # lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+    #     # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
+    #     # pyLDAvis.display(vis)
+    #     # logging.info("LDA model training completed!")
 
-        # Set n_topics based on DEBUG_MODE
-        # n_topics = 5 if DEBUG_MODE else None  # Set to 5 in DEBUG_MODE, None for full in production
-        # topic_model, topics, probs = train_bertopic_model(df['speech'])
-        # bertopic_model = topic_model #TODO: fix this part. 
-        # df['topic'] = topics
-        logging.info("BERTopic model training completed!")
-    except Exception as e:
-        logging.error(f"Error during topic modeling: {e}")
+    #     logging.info("Starting BERTopic model training...")
+        
+    #     # Train BERTopic model with savepoints
+    #     bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+        
+    #     # Save topics to DataFrame
+    #     df['topic'] = topics
+    #     logging.info("BERTopic model training completed!")
+
+    #     # Visualization
+    #     logging.info("Generating visualizations for BERTopic...")
+    #     bertopic_model.visualize_topics().show()  # General topic visualization
+    #     bertopic_model.visualize_hierarchy().show()  # Topic hierarchy
+    #     bertopic_model.visualize_heatmap().show()  # Topic similarity heatmap
+    #     bertopic_model.visualize_barchart().show()  # Topic frequency barchart
+
+    # except Exception as e:
+    #     logging.error(f"Error during topic modeling: {e}")
+
+
+'''
+6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopic’s
+time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
+'''
 
     # # Step 10: Analyze Topic Evolution
     # try:

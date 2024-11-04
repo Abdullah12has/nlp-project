@@ -1,3 +1,4 @@
+import logging
 from sklearn.feature_extraction.text import CountVectorizer
 from bertopic import BERTopic
 from gensim.models import LdaModel
@@ -104,11 +105,48 @@ def train_lda_model(
 
     return best_model, dictionary, corpus, vis
 
-def train_bertopic_model(documents):
-    """Train a BERTopic model."""
-    # Initialize the model
-    topic_model = BERTopic()  # Removed n_topics if unsupported
-    topics, probs = topic_model.fit_transform(documents)
+
+
+
+def save_bertopic_checkpoint(model, path="progress/bertopic_checkpoint.pkl"):
+    """Save the BERTopic model to a checkpoint."""
+    model.save(path)
+    logging.info(f"BERTopic model checkpoint saved at {path}")
+
+def load_bertopic_checkpoint(path="progress/bertopic_checkpoint.pkl"):
+    """Load BERTopic model checkpoint if available."""
+    if os.path.exists(f"{path}.pkl"):
+        model = BERTopic.load(path)
+        logging.info(f"Loaded BERTopic model checkpoint from {path}")
+        return model
+    return None
+
+
+def train_bertopic_model(documents, checkpoint_path="progress/bertopic_checkpoint.pkl", min_topic_size=10):
+    """
+    Train a BERTopic model with savepoint functionality.
+    
+    Args:
+        documents (list of str): The documents to be used for topic modeling.
+        checkpoint_path (str): Path to save/load model checkpoints.
+        min_topic_size (int): Minimum topic size for BERTopic model.
+    
+    Returns:
+        tuple: (model, topics, probabilities)
+    """
+    # Load checkpoint if available
+    topic_model = load_bertopic_checkpoint(checkpoint_path)
+    
+    # Train if no checkpoint exists
+    if not topic_model:
+        logging.info("Initializing and training BERTopic model...")
+        topic_model = BERTopic(min_topic_size=min_topic_size, verbose=True)  # Set other hyperparameters as needed
+        topics, probs = topic_model.fit_transform(documents)
+        save_bertopic_checkpoint(topic_model, checkpoint_path)
+    else:
+        logging.info("BERTopic model checkpoint found, skipping training.")
+        topics, probs = topic_model.transform(documents)  # Transform if already trained
+
     return topic_model, topics, probs
 
 def analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'speaker'], topic_model=None):

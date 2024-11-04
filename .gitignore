@@ -8,6 +8,9 @@
 #all txt files
 *.txt
 
+# all checkpoint files 
+*.pkl
+
 # Ignore Python cache and compiled files
 __pycache__/
 *.pyc
