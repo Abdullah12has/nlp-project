@@ -237,7 +237,7 @@ if __name__ == '__main__':
 
     # Step 7: Correlation Between Features and Sentiment
     '''
-Correlation Between Features and Sentiment: Calculate the correlation between sentiment scores and features of
+4. Correlation Between Features and Sentiment: Calculate the correlation between sentiment scores and features of
 Speech_date, year, time, gender and party_group and analyze whether a certain feature (e.g., Male, Labour and …) tend to be
 positive or negative. Plot the distribution plots for positive and negative reviews to explore potential patterns.
     '''
@@ -258,7 +258,7 @@ positive or negative. Plot the distribution plots for positive and negative revi
         sentiment_column = 'sentiment_confidence'
 
         # Calculate and plot correlations
-        correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column)
+        # correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column)
 
         # Plot sentiment distribution for each categorical feature
         for feature in categorical_features:
