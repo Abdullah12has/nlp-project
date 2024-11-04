@@ -236,6 +236,11 @@ if __name__ == '__main__':
     #     logging.error(f"Error during sentiment classification or analysis: {e}")
 
     # Step 7: Correlation Between Features and Sentiment
+    '''
+Correlation Between Features and Sentiment: Calculate the correlation between sentiment scores and features of
+Speech_date, year, time, gender and party_group and analyze whether a certain feature (e.g., Male, Labour and …) tend to be
+positive or negative. Plot the distribution plots for positive and negative reviews to explore potential patterns.
+    '''
     try:
         logging.info("Classifying sentiment...")
         df, summary = classify_sentiment(df)
