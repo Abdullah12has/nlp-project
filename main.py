@@ -285,33 +285,40 @@ if __name__ == '__main__':
     hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
     visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
     '''
-    # try:
-    #     # logging.info("Training topic models...")
-    #     lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
-    #     # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
-    #     # pyLDAvis.display(vis)
-    #     # logging.info("LDA model training completed!")
-    #     print(ldatopics)
+    try:
+        # logging.info("Training topic models...")
+        lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+        # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
+        # pyLDAvis.display(vis)
+        # logging.info("LDA model training completed!")
+        print(ldatopics)
 
-    #     logging.info("Starting BERTopic model training...")
+        logging.info("Starting BERTopic model training...")
         
-    #     # Train BERTopic model with savepoints
-    #     bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+        # Train BERTopic model with savepoints
+        bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
-    #     print(topics)
-    #     # Save topics to DataFrame
-    #     df['topic'] = topics
-    #     logging.info("BERTopic model training completed!")
+        print(topics)
+        # Save topics to DataFrame
+        df['topic'] = topics
+        logging.info("BERTopic model training completed!")
 
-    #     # Visualization
-    #     logging.info("Generating visualizations for BERTopic...")
-    #     bertopic_model.visualize_topics().show()  # General topic visualization
-    #     bertopic_model.visualize_hierarchy().show()  # Topic hierarchy
-    #     bertopic_model.visualize_heatmap().show()  # Topic similarity heatmap
-    #     bertopic_model.visualize_barchart().show()  # Topic frequency barchart
+        # Visualization
+        logging.info("Generating visualizations for BERTopic...")
+        topic_vis = bertopic_model.visualize_topics()
+        topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
 
-    # except Exception as e:
-    #     logging.error(f"Error during topic modeling: {e}")
+        hierarchy_vis = bertopic_model.visualize_hierarchy()
+        hierarchy_vis.write_html("data/bertopic_hierarchy.html")  # Save Topic Hierarchy visualization
+
+        heatmap_vis = bertopic_model.visualize_heatmap()
+        heatmap_vis.write_html("data/bertopic_heatmap.html")  # Save Topic Similarity Heatmap
+
+        barchart_vis = bertopic_model.visualize_barchart()
+        barchart_vis.write_html("data/bertopic_barchart.html")
+
+    except Exception as e:
+        logging.error(f"Error during topic modeling: {e}")
 
 
     # Step 10: Analyze Topic Evolution
