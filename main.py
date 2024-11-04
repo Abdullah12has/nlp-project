@@ -48,7 +48,7 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/senti_df.csv'
+DATA_PATH = 'data/data.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -238,29 +238,24 @@ if __name__ == '__main__':
     # Step 7: Correlation Between Features and Sentiment
     try:
         logging.info("Classifying sentiment...")
-        df, summary = classify_sentiment(df)
-    
-        # Drop rows with NaN in key columns before correlation
+        df, summary = classify_sentiment(df)    
+        # Drop rows with NaN in key columns before correlation analysis
         df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
-
-        # # Perform PCA
-        # pca_results = perform_pca(df[['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']])
-        # if pca_results is not None:
-        #     logging.info("PCA performed successfully.")
-
-        # Calculate correlations and plot results
+        
+        # Define features to analyze
         features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
         sentiment_column = 'sentiment_confidence'
-
-        # Calculate and plot correlations
-        correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column)
-
+        sentiment_label_column = 'sentiment'
+        
+        # Calculate and plot correlations including sentiment classification
+        correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
+        
         # Plot sentiment distribution for each categorical feature
+        categorical_features = ['gender', 'party_group']
         for feature in categorical_features:
-            plot_sentiment_distribution(df, feature, sentiment_column)
-
+            plot_sentiment_distribution(df, feature, sentiment_label_column)
+        
         logging.info("Correlation analysis completed successfully.")
-
     except Exception as e:
         logging.error(f"Error during correlation analysis: {e}")
         
@@ -276,21 +271,21 @@ if __name__ == '__main__':
     #     logging.error(f"Error during correlation analysis: {e}")
 
     # # Step 9: Train Topic Models
-    try:
-        logging.info("Training topic models...")
-        lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 10, 10)
-        pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
-        pyLDAvis.display(vis)
-        logging.info("LDA model training completed!")
+    # try:
+    #     logging.info("Training topic models...")
+    #     lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+    #     pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
+    #     pyLDAvis.display(vis)
+    #     logging.info("LDA model training completed!")
 
         # Set n_topics based on DEBUG_MODE
         # n_topics = 5 if DEBUG_MODE else None  # Set to 5 in DEBUG_MODE, None for full in production
         # topic_model, topics, probs = train_bertopic_model(df['speech'])
         # bertopic_model = topic_model #TODO: fix this part. 
         # df['topic'] = topics
-        logging.info("BERTopic model training completed!")
-    except Exception as e:
-        logging.error(f"Error during topic modeling: {e}")
+    #     logging.info("BERTopic model training completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during topic modeling: {e}")
 
     # # Step 10: Analyze Topic Evolution
     # try:

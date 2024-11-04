@@ -48,24 +48,25 @@ def perform_pca(df, n_components=2):
     principal_components = pca.fit_transform(df)
     return principal_components
 
-def plot_sentiment_distribution(df, feature, sentiment_column='sentiment'):
-    """Plot distribution of sentiment scores for different categories of a feature."""
-    plt.figure(figsize=(14, 7))
-
-    if pd.api.types.is_numeric_dtype(df[feature]):
-        # Plot distribution for numerical features
-        sns.histplot(data=df, x=feature, hue=sentiment_column, kde=True)
-        plt.title(f'Sentiment Distribution by {feature}')
+def plot_sentiment_distribution(df, feature, sentiment_label_column='sentiment'):
+    """
+    Plots the distribution of positive and negative sentiment for a given categorical feature.
+    
+    Args:
+        df (pd.DataFrame): The input DataFrame with sentiment data.
+        feature (str): The feature for which to plot the sentiment distribution.
+        sentiment_label_column (str): The column containing positive/negative sentiment labels.
+    """
+    if feature in df.columns:
+        # Plot sentiment count for each category
+        sns.countplot(x=feature, hue=sentiment_label_column, data=df)
+        plt.title(f'Sentiment Distribution by {feature.capitalize()}')
+        plt.xlabel(feature.capitalize())
+        plt.ylabel('Count')
+        plt.xticks(rotation=45)
+        plt.show()
     else:
-        # Plot distribution for categorical features
-        sns.countplot(data=df, x=feature, hue=sentiment_column)
-        plt.title(f'Sentiment Counts by {feature}')
-
-    plt.xlabel(feature)
-    plt.ylabel('Count')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+        print(f"Feature '{feature}' not found in DataFrame.")
     
 def clean_numeric_columns(df, numeric_columns):
     """Convert specified numeric columns to numeric, coercing errors to NaN."""
@@ -90,45 +91,53 @@ def drop_low_variance_features(df, threshold=0.01):
     df = df.drop(columns=low_variance_features)
     return df
 
-def calculate_and_plot_correlations(df, feature_list, sentiment_column='sentiment_confidence'):
-    """Calculate correlations between specified features and sentiment column, and plot results."""
-    correlation_results = {}
+def calculate_and_plot_correlations(df, features, sentiment_column, sentiment_label_column='sentiment'):
+    """
+    Calculates and plots the correlation between sentiment scores and specified features,
+    with feature-level visualizations that include sentiment classification.
+    
+    Args:
+        df (pd.DataFrame): The input DataFrame with sentiment data.
+        features (list): A list of feature column names to correlate with sentiment scores.
+        sentiment_column (str): The name of the column containing sentiment scores.
+        sentiment_label_column (str): The name of the column containing positive/negative labels.
+        
+    Returns:
+        pd.Series: The correlation results between sentiment scores and specified features.
+    """
+    correlations = {}
 
-    # Drop NaN values to avoid calculation errors
-    df = df.dropna(subset=feature_list + [sentiment_column])
+    for feature in features:
+        if df[feature].dtype == 'object' or df[feature].nunique() < 10:  # Categorical data handling
+            # Plot the distribution of sentiment confidence for each category split by sentiment label
+            sns.boxplot(x=feature, y=sentiment_column, hue=sentiment_label_column, data=df)
+            plt.title(f'Sentiment Confidence by {feature.capitalize()} and Sentiment Type')
+            plt.xticks(rotation=45)
+            plt.show()
+            
+            # Calculate the percentage of positive and negative sentiment for each category
+            sentiment_distribution = df.groupby([feature, sentiment_label_column]).size().unstack(fill_value=0)
+            sentiment_distribution = (sentiment_distribution.T / sentiment_distribution.sum(axis=1)).T * 100
+            sentiment_distribution.plot(kind='bar', stacked=True)
+            plt.title(f'Sentiment Distribution by {feature.capitalize()}')
+            plt.ylabel('Percentage (%)')
+            plt.show()
+            
+            correlations[feature] = df.groupby(feature)[sentiment_column].mean()
 
-    # Drop low variance features
-    # df = drop_low_variance_features(df)
-
-    logging.info("Calculating correlations...")
-
-    for feature in feature_list:
-        if feature in df.columns:
-            # Check if the feature has variance
-            if df[feature].nunique() > 1:  # Ensure there's more than one unique value
-                if pd.api.types.is_numeric_dtype(df[feature]):
-                    # Direct correlation for numerical data
-                    correlation_results[feature] = df[sentiment_column].corr(df[feature])
-                else:
-                    # Encode categorical features and calculate correlation
-                    encoded_feature = pd.Categorical(df[feature]).codes
-                    correlation_results[feature] = df[sentiment_column].corr(pd.Series(encoded_feature))
-            else:
-                logging.warning(f"Feature '{feature}' has insufficient variance for correlation.")
-                correlation_results[feature] = np.nan  # No correlation possible
-        else:
-            logging.warning(f"Feature '{feature}' is not present in the DataFrame.")
-
-    logging.info(f"Correlations calculated: {correlation_results}")
-
-    # Plot correlation results as a bar chart
-    plt.figure(figsize=(12, 6))
-    plt.bar(correlation_results.keys(), correlation_results.values(), color='skyblue')
-    plt.title('Correlation of Features with Sentiment Confidence')
-    plt.ylabel('Correlation Coefficient')
-    plt.xlabel('Features')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
-
-    return correlation_results
+        else:  # Numerical data handling
+            # Calculate and display correlation
+            correlation = df[feature].corr(df[sentiment_column])
+            correlations[feature] = correlation
+            
+            # Plot scatterplot with color-coded sentiment
+            sns.scatterplot(x=feature, y=sentiment_column, hue=sentiment_label_column, data=df)
+            plt.title(f'Correlation between {feature.capitalize()} and Sentiment Confidence')
+            plt.show()
+    
+    # Display correlation summary
+    correlation_series = pd.Series(correlations, name='Correlation')
+    print("Correlation results:")
+    print(correlation_series)
+    
+    return correlation_series
