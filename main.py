@@ -243,29 +243,24 @@ positive or negative. Plot the distribution plots for positive and negative revi
     '''
     try:
         logging.info("Classifying sentiment...")
-        df, summary = classify_sentiment(df)
-    
-        # Drop rows with NaN in key columns before correlation
+        df, summary = classify_sentiment(df)    
+        # Drop rows with NaN in key columns before correlation analysis
         df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
-
-        # # Perform PCA
-        # pca_results = perform_pca(df[['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']])
-        # if pca_results is not None:
-        #     logging.info("PCA performed successfully.")
-
-        # Calculate correlations and plot results
+        
+        # Define features to analyze
         features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
         sentiment_column = 'sentiment_confidence'
-
-        # Calculate and plot correlations
-        # correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column)
-
+        sentiment_label_column = 'sentiment'
+        
+        # Calculate and plot correlations including sentiment classification
+        correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
+        
         # Plot sentiment distribution for each categorical feature
-        # for feature in categorical_features:
-        #     plot_sentiment_distribution(df, feature, sentiment_column)
-
+        categorical_features = ['gender', 'party_group']
+        for feature in categorical_features:
+            plot_sentiment_distribution(df, feature, sentiment_label_column)
+        
         logging.info("Correlation analysis completed successfully.")
-
     except Exception as e:
         logging.error(f"Error during correlation analysis: {e}")
         
