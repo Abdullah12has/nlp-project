@@ -8,8 +8,28 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
-def train_lda_model(df, text_column):
-    """Train an LDA model with hyperparameter tuning and visualization."""
+def train_lda_model(
+    df: pd.DataFrame, 
+    text_column: str, 
+    min_topics: int = 2, 
+    max_topics: int = 10, 
+    passes: int = 20
+):
+    """
+    Train an optimized LDA model with coherence-based hyperparameter tuning 
+    and generate visualization with pyLDAvis.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing text data.
+        text_column (str): Column name for preprocessed text.
+        min_topics (int): Minimum number of topics for tuning.
+        max_topics (int): Maximum number of topics for tuning.
+        passes (int): Number of passes through the corpus during training.
+    
+    Returns:
+        tuple: (best_model, dictionary, corpus, vis) with best model, dictionary, 
+               corpus, and visualization object.
+    """
     # Prepare the data
     texts = df[text_column].apply(lambda x: x.split())
     dictionary = Dictionary(texts)
@@ -18,20 +38,38 @@ def train_lda_model(df, text_column):
     # Hyperparameter tuning for LDA
     best_model = None
     best_coherence = 0
+    best_num_topics = 0
 
-    for num_topics in range(2, 10):  # Adjust range as needed
-        lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=10)
-        coherence_model = CoherenceModel(model=lda_model, texts=texts, dictionary=dictionary, coherence='c_v')
+    for num_topics in range(min_topics, max_topics + 1):
+        lda_model = LdaModel(
+            corpus=corpus, 
+            num_topics=num_topics, 
+            id2word=dictionary, 
+            passes=passes, 
+            random_state=42
+        )
+        coherence_model = CoherenceModel(
+            model=lda_model, 
+            texts=texts, 
+            dictionary=dictionary, 
+            coherence='c_v'
+        )
         coherence = coherence_model.get_coherence()
 
         if coherence > best_coherence:
             best_coherence = coherence
             best_model = lda_model
+            best_num_topics = num_topics
 
-    print(f"Best LDA model with coherence score of {best_coherence:.4f}")
+    print(f"Best LDA model with {best_num_topics} topics and coherence score of {best_coherence:.4f}")
 
     # Visualization
-    vis = pyLDAvis.gensim_models.prepare(best_model, corpus, dictionary)
+    vis = None
+    try:
+        vis = pyLDAvis.gensim_models.prepare(best_model, corpus, dictionary)
+    except Exception as e:
+        print(f"Visualization failed: {e}")
+
     return best_model, dictionary, corpus, vis
 
 def train_bertopic_model(documents):
