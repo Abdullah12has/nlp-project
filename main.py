@@ -45,7 +45,7 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/senti_df_main.csv'
+DATA_PATH = 'data/senti_df.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -268,7 +268,7 @@ positive or negative. Plot the distribution plots for positive and negative revi
     # # Step 9: Train Topic Models
     try:
         logging.info("Training topic models...")
-        lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 100, 1000)
+        lda_model, dictionary, corpus, vis = train_lda_model(df, 'cleaned_text', 2, 10, 10)
         pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
         pyLDAvis.display(vis)
         logging.info("LDA model training completed!")

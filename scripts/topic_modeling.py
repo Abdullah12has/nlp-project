@@ -7,25 +7,50 @@ import pyLDAvis.gensim_models
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import pickle
+import os
+
+
+def save_checkpoint(model, dictionary, corpus, num_topics, coherence, path="progress/lda_checkpoint.pkl"):
+    """Save checkpoint of the current best LDA model and metadata."""
+    with open(path, 'wb') as f:
+        pickle.dump({
+            'model': model,
+            'dictionary': dictionary,
+            'corpus': corpus,
+            'num_topics': num_topics,
+            'coherence': coherence
+        }, f)
+
+def load_checkpoint(path="progress/lda_checkpoint.pkl"):
+    """Load checkpoint if it exists."""
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            checkpoint = pickle.load(f)
+        print(f"Loaded checkpoint with {checkpoint['num_topics']} topics and coherence score {checkpoint['coherence']:.4f}")
+        return checkpoint
+    return None
 
 def train_lda_model(
     df: pd.DataFrame, 
     text_column: str, 
     min_topics: int = 2, 
     max_topics: int = 10, 
-    passes: int = 20
+    passes: int = 20,
+    checkpoint_path="progress/lda_checkpoint.pkl"
 ):
     """
     Train an optimized LDA model with coherence-based hyperparameter tuning 
-    and generate visualization with pyLDAvis.
-    
+    and generate visualization with pyLDAvis, using savepoints.
+
     Args:
         df (pd.DataFrame): DataFrame containing text data.
         text_column (str): Column name for preprocessed text.
         min_topics (int): Minimum number of topics for tuning.
         max_topics (int): Maximum number of topics for tuning.
         passes (int): Number of passes through the corpus during training.
-    
+        checkpoint_path (str): Path to the checkpoint file.
+
     Returns:
         tuple: (best_model, dictionary, corpus, vis) with best model, dictionary, 
                corpus, and visualization object.
@@ -35,12 +60,18 @@ def train_lda_model(
     dictionary = Dictionary(texts)
     corpus = [dictionary.doc2bow(text) for text in texts]
 
-    # Hyperparameter tuning for LDA
-    best_model = None
-    best_coherence = 0
-    best_num_topics = 0
+    # Load checkpoint if available
+    checkpoint = load_checkpoint(checkpoint_path)
+    best_model = checkpoint['model'] if checkpoint else None
+    best_coherence = checkpoint['coherence'] if checkpoint else 0
+    best_num_topics = checkpoint['num_topics'] if checkpoint else 0
 
+    # Hyperparameter tuning for LDA
     for num_topics in range(min_topics, max_topics + 1):
+        if checkpoint and num_topics <= best_num_topics:
+            # Skip already trained models if resuming from checkpoint
+            continue
+
         lda_model = LdaModel(
             corpus=corpus, 
             num_topics=num_topics, 
@@ -60,6 +91,7 @@ def train_lda_model(
             best_coherence = coherence
             best_model = lda_model
             best_num_topics = num_topics
+            save_checkpoint(best_model, dictionary, corpus, best_num_topics, best_coherence, checkpoint_path)
 
     print(f"Best LDA model with {best_num_topics} topics and coherence score of {best_coherence:.4f}")
 
