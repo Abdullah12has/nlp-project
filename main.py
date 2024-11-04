@@ -328,6 +328,11 @@ if __name__ == '__main__':
     # except Exception as e:
     #     logging.error(f"Error during topic evolution analysis: {e}")
 
+    '''
+    7- Sentiment Correlation with Topics: Perform sentiment analysis on debate transcripts using VADER or TextBlob, with
+    potential fine-tuning for parliamentary language. Correlate sentiment trends with identified topics, highlighting emotional
+    patterns and contextual nuances like sarcasm or negation.'''
+    
     # # Step 11: Sentiment Correlation with Topics
     # try:
     #     logging.info("Correlating sentiment with topics...")
