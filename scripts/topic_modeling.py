@@ -213,3 +213,74 @@ def visualize_topic_trends(df, topic_column, time_column):
     plt.legend(title='Topics')
     plt.tight_layout()
     plt.show()
+
+def train_bertopic_model_over_time(documents, checkpoint_path="progress/bertopic_checkpoint.pkl", min_topic_size=10):
+    """Train a BERTopic model with savepoint functionality."""
+    topic_model = load_bertopic_checkpoint(checkpoint_path)
+    
+    if not topic_model:
+        logging.info("Initializing and training BERTopic model...")
+        topic_model = BERTopic(min_topic_size=min_topic_size, verbose=True)
+        topics, probs = topic_model.fit_transform(documents)
+        save_bertopic_checkpoint(topic_model, checkpoint_path)
+    else:
+        logging.info("BERTopic model checkpoint found, skipping training.")
+        topics, probs = topic_model.transform(documents)
+
+    return topic_model, topics, probs
+
+def visualize_topic_trends_over_time(topic_trends, title='Topic Trends Over Time', save_path='data/topic_trends_over_time.png'):
+    """Save the topic trends over time plot to a file."""
+    # Ensure the directory exists
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    sns.lineplot(data=topic_trends)
+    plt.title(title)
+    plt.xlabel('Time')
+    plt.ylabel('Number of Documents')
+    plt.legend(title='Topics')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    
+    # Save the plot
+    plt.savefig(save_path)
+    plt.close()  # Close the plot to prevent it from displaying
+    print(f"Plot saved to '{save_path}'")
+
+    
+def analyze_topic_evolution(df, topic_column='topic', time_column='year'):
+    """Analyze topic distribution over time."""
+    topic_counts = df.groupby([time_column, topic_column]).size().reset_index(name='counts')
+    topic_trends = topic_counts.pivot(index=time_column, columns=topic_column, values='counts').fillna(0)
+    return topic_trends
+
+def train_dynamic_lda_model(df, text_column, time_column, num_topics=5, passes=15):
+    """Train a dynamic LDA model."""
+    texts = df[text_column].apply(lambda x: x.split())
+    dictionary = Dictionary(texts)
+    corpus = [dictionary.doc2bow(text) for text in texts]
+    lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=passes)
+    vis = pyLDAvis.gensim_models.prepare(lda_model, corpus, dictionary)
+    return lda_model, vis
+
+def get_lda_topic_assignments(lda_model, documents):
+    """
+    Assign the most probable topic to each document based on an LDA model.
+
+    Parameters:
+    - lda_model: Trained LDA model.
+    - documents: List or series of preprocessed documents.
+
+    Returns:
+    - A list of topic assignments for each document.
+    """
+    topic_assignments = []
+    for doc in documents:
+        bow = lda_model.id2word.doc2bow(doc.split())  # Convert document to bag-of-words format
+        topic_distribution = lda_model.get_document_topics(bow, minimum_probability=0.0)
+        most_probable_topic = max(topic_distribution, key=lambda x: x[1])[0]  # Select topic with highest probability
+        topic_assignments.append(most_probable_topic)
+    
+    return topic_assignments
