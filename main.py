@@ -37,6 +37,8 @@ from scripts.topic_modeling import (
     analyze_topic_evolution,
     visualize_topic_trends_over_time,
     get_lda_topic_assignments,
+    extract_bertopic_names,
+    extract_topics
 )
 from scripts.sentiment_prediction import predict_sentiment_with_roberta
 from scripts.sentiment_model_comparison import compare_pretrained_models
@@ -323,38 +325,83 @@ if __name__ == '__main__':
     6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopic’s
     time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
     '''
-    try:
-        # Dynamic LDA Model Training
-        lda_dynamic_model, lda_vis = train_dynamic_lda_model(df, 'cleaned_text', 'year', num_topics=5, passes=5)
-        logging.info("Dynamic LDA model trained successfully!")
-        # Visualize Dynamic LDA
-        print("LDA Visualization: ")
-        pyLDAvis.save_html(lda_vis, 'graphs/lda_dynamic_visualization.html')
-        print("LDA visualization saved to 'lda_visualization.html'. Open this file in a browser to view.")
-        # Assign topics from LDA to DataFrame
-        df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
-        logging.info("LDA topic assignments added to DataFrame.")
-        # BERTopic Model with Time Evolution
-        logging.info("Training BERTopic model with time evolution...")
-        bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
-        logging.info("BERTopic model with time evolution trained successfully!")
-        # Assign topics from BERTopic to DataFrame
-        df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
-        logging.info("BERTopic topic assignments added to DataFrame.")
-        # Analyze Topic Trends for LDA
-        logging.info("Analyzing LDA topic trends over time...")
-        lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
-        visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
-        logging.info("LDA topic trend visualization completed.")
-        # Analyze Topic Trends for BERTopic
-        logging.info("Analyzing BERTopic trends over time...")
-        bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
-        visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
-        logging.info("BERTopic topic trend visualization completed.")
-        logging.info("Topic evolution analysis completed successfully.")
-    except Exception as e:
-        logging.error(f"Error during topic evolution analysis: {e}")
-
+    # try:
+    lda_dynamic_model, lda_vis, time_slices = train_dynamic_lda_model(
+        df,
+        text_column='cleaned_text',
+        time_column='year',
+        num_topics=5,  # Adjust number of topics if necessary
+        passes=5
+    )
+    logging.info("Dynamic LDA model trained successfully!")
+    
+    # Save LDA Visualization
+    pyLDAvis.save_html(lda_vis, 'graphs/lda_dynamic_visualization.html')
+    logging.info("LDA visualization saved to 'graphs/lda_dynamic_visualization.html'.")
+    
+    # Extract and assign topic names from LDA
+    lda_topic_names = extract_topics(lda_dynamic_model)  # Extract topic names
+    logging.info(f"LDA Topic Names Extracted: {lda_topic_names}")
+    
+    # Assign topic indices to the DataFrame
+    df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
+    
+    # Log the unique topic assignments for debugging
+    unique_topics = df['lda_topic'].unique()
+    logging.info(f"Unique LDA Assignments: {unique_topics}")
+    
+    # Map topic indices to their names
+    # Update the mapping logic to match the expected format
+    df['lda_topic_name'] = df['lda_topic'].map(lambda x: lda_topic_names.get(x, 'Unknown Topic')).fillna('Unknown Topic')
+    
+    # Debugging output to check mappings
+    logging.info(f"LDA Topic Names Keys: {lda_topic_names.keys()}")
+    logging.info(f"DataFrame Sample After Mapping:\n{df[['cleaned_text', 'lda_topic', 'lda_topic_name']].head(10)}")
+    
+    # Check for NaN assignments in lda_topic_name
+    if df['lda_topic_name'].isnull().any():
+        logging.warning("Some LDA topic names are not assigned. Check the mapping.")
+        logging.info(f"Unique LDA Topics in DataFrame: {df['lda_topic'].unique()}")
+        logging.info(f"LDA Topic Names Keys: {lda_topic_names.keys()}")
+        logging.info(f"DataFrame Sample:\n{df[['cleaned_text', 'lda_topic', 'lda_topic_name']].head(10)}")
+    
+    # Analyze Topic Trends for LDA
+    logging.info("Analyzing LDA topic trends over time...")
+    lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic_name', time_column='year')
+    visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
+    logging.info("LDA topic trend visualization completed.")
+    
+    # Print LDA topic names and sample of the DataFrame
+    print("LDA topic names:", lda_topic_names)
+    print("Sample of LDA topics in DataFrame:", df[['lda_topic', 'lda_topic_name']].head())
+    
+    # Continue with BERTopic Model with Time Evolution
+    logging.info("Training BERTopic model with time evolution...")
+    bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
+    logging.info("BERTopic model with time evolution trained successfully!")
+    
+    # Extract and assign topic names from BERTopic
+    bertopic_topic_names = extract_bertopic_names(bertopic_model_over_time)
+    df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
+    df['bertopic_topic_name'] = df['bertopic_topic'].map(bertopic_topic_names).fillna('Unknown Topic')
+    logging.info("BERTopic topic assignments and names added to DataFrame.")
+    
+    # Check for NaN assignments in BERTopic
+    if df['bertopic_topic_name'].isnull().any():
+        logging.warning("Some BERTopic topic names are not assigned. Check the mapping.")
+        logging.info(f"Unique BERTopic Topics in DataFrame: {df['bertopic_topic'].unique()}")
+        logging.info(f"BERTopic Topic Names Keys: {bertopic_topic_names.keys()}")
+        logging.info(f"DataFrame Sample:\n{df[['cleaned_text', 'bertopic_topic', 'bertopic_topic_name']].head(10)}")
+    
+    # Analyze Topic Trends for BERTopic
+    logging.info("Analyzing BERTopic trends over time...")
+    bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic_name', time_column='year')
+    visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
+    logging.info("BERTopic topic trend visualization completed.")
+    
+    logging.info("Topic evolution analysis completed successfully.")
+    # except Exception as e:
+    #     logging.error(f"Error during topic evolution analysis: {e}")
 
     # # Step 11: Sentiment Correlation with Topics
     # try:

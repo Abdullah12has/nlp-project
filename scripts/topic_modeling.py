@@ -10,6 +10,10 @@ import seaborn as sns
 import pandas as pd
 import pickle
 import os
+from gensim.models import LdaModel
+from gensim.corpora import Dictionary
+
+
 
 
 
@@ -32,13 +36,13 @@ def load_checkpoint(checkpoint_path):
             return pickle.load(f)
     return None
 
-def extract_topics(lda_model, num_words=10):
-    """Extract topics from LDA model as lists of words with their probabilities."""
-    topics = []
+def extract_topics(lda_model, num_words=5):
+    """Extract topic names for display based on the most significant words."""
+    topics_dict = {}
     for topic_id, topic in lda_model.show_topics(formatted=False, num_words=num_words):
-        topic_words = {word: prob for word, prob in topic}
-        topics.append((topic_id, topic_words))
-    return topics
+        topic_name = f"Topic {topic_id}: " + ', '.join([word for word, _ in topic])
+        topics_dict[topic_id] = topic_name
+    return topics_dict
 
 def train_lda_model(
     df: pd.DataFrame, 
@@ -200,12 +204,12 @@ def topic_evolution_over_time(df, topic_column='topic', time_column='year'):
     plt.show()
 
 def visualize_topic_trends(df, topic_column, time_column):
-    """Visualize topic trends over time."""
+    """Visualize topic trends over time with topic names."""
     topic_counts = df.groupby([time_column, topic_column]).size().unstack(fill_value=0)
 
     plt.figure(figsize=(15, 8))
     for topic in topic_counts.columns:
-        plt.plot(topic_counts.index, topic_counts[topic], label=f'Topic {topic}')
+        plt.plot(topic_counts.index, topic_counts[topic], label=topic)  # Use topic name
 
     plt.title('Topic Trends Over Time')
     plt.xlabel('Year')
@@ -214,7 +218,8 @@ def visualize_topic_trends(df, topic_column, time_column):
     plt.tight_layout()
     plt.show()
 
-def train_bertopic_model_over_time(documents, checkpoint_path="progress/bertopic_checkpoint.pkl", min_topic_size=10):
+
+def train_bertopic_model_over_time(documents, checkpoint_path="progress/bertopic_model_over_time_checkpoint.pkl", min_topic_size=10):
     """Train a BERTopic model with savepoint functionality."""
     topic_model = load_bertopic_checkpoint(checkpoint_path)
     
@@ -229,58 +234,108 @@ def train_bertopic_model_over_time(documents, checkpoint_path="progress/bertopic
 
     return topic_model, topics, probs
 
-def visualize_topic_trends_over_time(topic_trends, title='Topic Trends Over Time', save_path='data/topic_trends_over_time.png'):
-    """Save the topic trends over time plot to a file."""
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    
-    # Create the plot
+def visualize_topic_trends_over_time(topic_trends_df, save_path='graphs/lda_topic_trends_over_time.png'):
+    """
+    Visualizes the trends of LDA topics over time.
+
+    Args:
+    - topic_trends_df (pd.DataFrame): DataFrame containing 'year', 'lda_topic_name', and 'Count' columns.
+    - save_path (str): Path to save the generated plot.
+    """
+    required_columns = ['year', 'lda_topic_name', 'Count']
+    if not all(col in topic_trends_df.columns for col in required_columns):
+        logging.error(f"Expected columns {required_columns} not found in the DataFrame.")
+        return
+
+    # Check for NaN values in topic names
+    if topic_trends_df['lda_topic_name'].isnull().any():
+        logging.warning("NaN values found in 'lda_topic_name'. Consider checking topic assignments.")
+
     plt.figure(figsize=(12, 6))
-    sns.lineplot(data=topic_trends)
-    plt.title(title)
-    plt.xlabel('Time')
-    plt.ylabel('Number of Documents')
-    plt.legend(title='Topics')
+    topics = topic_trends_df['lda_topic_name'].unique()
+    
+    # Plot each topic's trend
+    for topic in topics:
+        group = topic_trends_df[topic_trends_df['lda_topic_name'] == topic]
+        if not group.empty:
+            plt.plot(group['year'], group['Count'], label=topic)
+    
+    plt.title('LDA Topic Trends Over Time')
+    plt.xlabel('Year')
+    plt.ylabel('Count')
     plt.xticks(rotation=45)
+    plt.legend(loc='upper left')
     plt.tight_layout()
     
-    # Save the plot
     plt.savefig(save_path)
-    plt.close()  # Close the plot to prevent it from displaying
-    print(f"Plot saved to '{save_path}'")
+    plt.close()
+    logging.info(f"LDA topic trend visualization saved to {save_path}")
 
     
-def analyze_topic_evolution(df, topic_column='topic', time_column='year'):
-    """Analyze topic distribution over time."""
-    topic_counts = df.groupby([time_column, topic_column]).size().reset_index(name='counts')
-    topic_trends = topic_counts.pivot(index=time_column, columns=topic_column, values='counts').fillna(0)
-    return topic_trends
+def analyze_topic_evolution(df, topic_column, time_column):
+    """Analyze topic evolution over time."""
+    if topic_column not in df.columns or time_column not in df.columns:
+        raise ValueError(f"Expected '{topic_column}' or '{time_column}' column not found in the DataFrame.")
+    
+    topic_trends_df = df.groupby([time_column, topic_column]).size().reset_index(name='Count')
+    
+    # Ensure the column names are correctly referenced
+    logging.info(f"Columns in topic_trends_df: {topic_trends_df.columns}")
+    
+    return topic_trends_df
 
-def train_dynamic_lda_model(df, text_column, time_column, num_topics=5, passes=15):
-    """Train a dynamic LDA model."""
-    texts = df[text_column].apply(lambda x: x.split())
+def train_dynamic_lda_model(df, text_column, time_column, num_topics=5, passes=15, checkpoint_path="progress/dynamic_lda_checkpoint.pkl"):
+    """Train a dynamic LDA model with time-based analysis and savepoint functionality."""
+    
+    # Ensure time column is in datetime format
+    df[time_column] = pd.to_datetime(df[time_column])
+
+    # Group documents by time period (e.g., monthly)
+    df['time_slice'] = df[time_column].dt.to_period('Y')  # Change 'M' for monthly, 'Y' for yearly, etc.
+    time_slices = df['time_slice'].value_counts().sort_index().index.tolist()
+    
+    # Prepare texts
+    texts = df.groupby('time_slice')[text_column].apply(lambda x: ' '.join(x)).tolist()
+    texts = [text.split() for text in texts]  # Tokenize the texts
+
+    # Create a directory for checkpoints if it doesn't exist
+    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
+
     dictionary = Dictionary(texts)
     corpus = [dictionary.doc2bow(text) for text in texts]
-    lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=passes)
+
+    # Load checkpoint if available
+    checkpoint = load_checkpoint(checkpoint_path)
+    lda_model = checkpoint['model'] if checkpoint else None
+
+    if not lda_model:
+        logging.info("Training a new dynamic LDA model...")
+        lda_model = LdaModel(corpus, num_topics=num_topics, id2word=dictionary, passes=passes)
+        save_checkpoint(lda_model, dictionary, corpus, num_topics, None, checkpoint_path)
+    else:
+        logging.info("Dynamic LDA model checkpoint found, skipping training.")
+
     vis = pyLDAvis.gensim_models.prepare(lda_model, corpus, dictionary)
-    return lda_model, vis
+    # Ensure the function returns three values
+    return lda_model, vis, time_slices
 
 def get_lda_topic_assignments(lda_model, documents):
-    """
-    Assign the most probable topic to each document based on an LDA model.
-
-    Parameters:
-    - lda_model: Trained LDA model.
-    - documents: List or series of preprocessed documents.
-
-    Returns:
-    - A list of topic assignments for each document.
-    """
+    topic_names = extract_topics(lda_model)  # Extract topic names
     topic_assignments = []
     for doc in documents:
-        bow = lda_model.id2word.doc2bow(doc.split())  # Convert document to bag-of-words format
+        bow = lda_model.id2word.doc2bow(doc.split())
         topic_distribution = lda_model.get_document_topics(bow, minimum_probability=0.0)
-        most_probable_topic = max(topic_distribution, key=lambda x: x[1])[0]  # Select topic with highest probability
-        topic_assignments.append(most_probable_topic)
-    
+        most_probable_topic = max(topic_distribution, key=lambda x: x[1])[0]
+        topic_assignments.append(most_probable_topic)  # Store topic index
     return topic_assignments
+
+
+def extract_bertopic_names(bertopic_model, num_words=5):
+    """Generate human-readable topic names from BERTopic model."""
+    topic_names = {}
+    for topic_id in bertopic_model.get_topics():
+        if topic_id != -1:  # Skip the outlier group
+            words = [word for word, _ in bertopic_model.get_topic(topic_id)[:num_words]]
+            topic_names[topic_id] = f"Topic {topic_id}: " + ', '.join(words)
+    return topic_names
+
