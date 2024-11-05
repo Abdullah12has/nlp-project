@@ -53,7 +53,7 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/senti_df_main.csv'
+DATA_PATH = 'data/subset_senti_df_10.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -282,13 +282,13 @@ if __name__ == '__main__':
     hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
     visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
     '''
-    try:
+    # try:
         # logging.info("Training topic models...")
-        lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+        # lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
         # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
         # pyLDAvis.display(vis)
         # logging.info("LDA model training completed!")
-        print(ldatopics)
+        # print(ldatopics)
 
 #         logging.info("Starting BERTopic model training...")
         
@@ -301,21 +301,21 @@ if __name__ == '__main__':
 #         logging.info("BERTopic model training completed!")
 
         # Visualization
-        logging.info("Generating visualizations for BERTopic...")
-        topic_vis = bertopic_model.visualize_topics()
-        topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
+    #     logging.info("Generating visualizations for BERTopic...")
+    #     topic_vis = bertopic_model.visualize_topics()
+    #     topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
 
-        hierarchy_vis = bertopic_model.visualize_hierarchy()
-        hierarchy_vis.write_html("data/bertopic_hierarchy.html")  # Save Topic Hierarchy visualization
+    #     hierarchy_vis = bertopic_model.visualize_hierarchy()
+    #     hierarchy_vis.write_html("data/bertopic_hierarchy.html")  # Save Topic Hierarchy visualization
 
-        heatmap_vis = bertopic_model.visualize_heatmap()
-        heatmap_vis.write_html("data/bertopic_heatmap.html")  # Save Topic Similarity Heatmap
+    #     heatmap_vis = bertopic_model.visualize_heatmap()
+    #     heatmap_vis.write_html("data/bertopic_heatmap.html")  # Save Topic Similarity Heatmap
 
-        barchart_vis = bertopic_model.visualize_barchart()
-        barchart_vis.write_html("data/bertopic_barchart.html")
+    #     barchart_vis = bertopic_model.visualize_barchart()
+    #     barchart_vis.write_html("data/bertopic_barchart.html")
 
-    except Exception as e:
-        logging.error(f"Error during topic modeling: {e}")
+    # except Exception as e:
+    #     logging.error(f"Error during topic modeling: {e}")
 
 
     # Step 10: Analyze Topic Evolution
@@ -325,11 +325,11 @@ if __name__ == '__main__':
     '''
     try:
         # Dynamic LDA Model Training
-        lda_dynamic_model, lda_vis = train_dynamic_lda_model(df, 'cleaned_text', 'year', num_topics=5, passes=15)
+        lda_dynamic_model, lda_vis = train_dynamic_lda_model(df, 'cleaned_text', 'year', num_topics=5, passes=5)
         logging.info("Dynamic LDA model trained successfully!")
         # Visualize Dynamic LDA
         print("LDA Visualization: ")
-        pyLDAvis.save_html(lda_vis, 'lda_visualization.html')
+        pyLDAvis.save_html(lda_vis, 'graphs/lda_dynamic_visualization.html')
         print("LDA visualization saved to 'lda_visualization.html'. Open this file in a browser to view.")
         # Assign topics from LDA to DataFrame
         df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
