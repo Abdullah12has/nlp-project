@@ -4,6 +4,8 @@ import logging
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
 
 # Ensure logging is configured
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +23,7 @@ def plot_correlation_heatmap(df, sentiment_columns):
     plt.title('Correlation Heatmap of Sentiment Scores')
     plt.show()
 
-def correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topic_column='topic'):
+def correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='topic'):
     """
     Correlate sentiment scores with topics and visualize the results.
     
@@ -32,14 +34,48 @@ def correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topi
     """
     # Grouping by topic and calculating mean sentiment
     sentiment_by_topic = df.groupby(topic_column)[sentiment_column].mean().reset_index()
-    
+
+    # Create a bar plot for mean sentiment score by topic
     plt.figure(figsize=(12, 6))
-    sns.barplot(data=sentiment_by_topic, x=topic_column, y=sentiment_column)
-    plt.title('Mean Sentiment Score by Topic')
+    sns.barplot(data=sentiment_by_topic, x=topic_column, y=sentiment_column, palette='coolwarm')
+    plt.title('Mean Sentiment Confidence by Topic')
     plt.xlabel('Topic')
-    plt.ylabel('Mean Sentiment Score')
+    plt.ylabel('Mean Sentiment Confidence')
     plt.xticks(rotation=45)
+    plt.axhline(0, color='gray', linestyle='--', linewidth=1)  # Add a line at 0 for reference
+    plt.tight_layout()
     plt.show()
+
+    # Optional: Analyze sentiment distribution for each topic
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(data=df, x=topic_column, y=sentiment_column, palette='coolwarm')
+    plt.title('Sentiment Confidence Distribution by Topic')
+    plt.xlabel('Topic')
+    plt.ylabel('Sentiment Confidence')
+    plt.xticks(rotation=45)
+    plt.axhline(0, color='gray', linestyle='--', linewidth=1)  # Add a line at 0 for reference
+    plt.tight_layout()
+    plt.show()
+    
+def analyze_sentiment(df, text_column, sentiment_column='sentiment_score'):
+    """
+    Analyze sentiment using VADER and add sentiment scores to the DataFrame.
+    
+    Args:
+        df (pd.DataFrame): DataFrame containing text data.
+        text_column (str): Column name for preprocessed text.
+        sentiment_column (str): Column name to store sentiment scores.
+    
+    Returns:
+        pd.DataFrame: DataFrame with sentiment scores added.
+    """
+    # Initialize VADER sentiment analyzer
+    sid = SentimentIntensityAnalyzer()
+    
+    # Calculate sentiment scores
+    df[sentiment_column] = df[text_column].apply(lambda x: sid.polarity_scores(x)['compound'])
+    
+    return df
     
 
 def perform_pca(df, n_components=2):

@@ -24,7 +24,9 @@ from scripts.sentiment_correlation import (
     plot_sentiment_distribution,
     perform_pca,
     clean_numeric_columns,
-    identify_non_numeric_values
+    identify_non_numeric_values,
+    correlate_sentiment_with_topics,
+    analyze_sentiment
 )
 from scripts.topic_modeling import (
     train_lda_model,
@@ -333,36 +335,42 @@ if __name__ == '__main__':
         print("LDA visualization saved to 'lda_visualization.html'. Open this file in a browser to view.")
         # Assign topics from LDA to DataFrame
         df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
+        print(df['lda_topic'])
         logging.info("LDA topic assignments added to DataFrame.")
         # BERTopic Model with Time Evolution
-        logging.info("Training BERTopic model with time evolution...")
-        bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
-        logging.info("BERTopic model with time evolution trained successfully!")
-        # Assign topics from BERTopic to DataFrame
-        df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
-        logging.info("BERTopic topic assignments added to DataFrame.")
-        # Analyze Topic Trends for LDA
-        logging.info("Analyzing LDA topic trends over time...")
-        lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
-        visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
-        logging.info("LDA topic trend visualization completed.")
-        # Analyze Topic Trends for BERTopic
-        logging.info("Analyzing BERTopic trends over time...")
-        bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
-        visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
-        logging.info("BERTopic topic trend visualization completed.")
-        logging.info("Topic evolution analysis completed successfully.")
+        # logging.info("Training BERTopic model with time evolution...")
+        # bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
+        # logging.info("BERTopic model with time evolution trained successfully!")
+        # # Assign topics from BERTopic to DataFrame
+        # df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
+        # logging.info("BERTopic topic assignments added to DataFrame.")
+        # # Analyze Topic Trends for LDA
+        # logging.info("Analyzing LDA topic trends over time...")
+        # lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
+        # visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
+        # logging.info("LDA topic trend visualization completed.")
+        # # Analyze Topic Trends for BERTopic
+        # logging.info("Analyzing BERTopic trends over time...")
+        # bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
+        # visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
+        # logging.info("BERTopic topic trend visualization completed.")
+        # logging.info("Topic evolution analysis completed successfully.")
     except Exception as e:
         logging.error(f"Error during topic evolution analysis: {e}")
 
 
     # # Step 11: Sentiment Correlation with Topics
-    # try:
-    #     logging.info("Correlating sentiment with topics...")
-    #     correlate_sentiment_with_topics(df, sentiment_column=SENTIMENT_SCORE_COLUMN, topic_column='topic')
-    #     logging.info("Sentiment correlation with topics completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during sentiment correlation analysis: {e}")
+    try:
+        logging.info("Analyzing sentiment...")
+        df, summary = classify_sentiment(df)
+        df = analyze_sentiment(df, text_column='cleaned_text') 
+        logging.info("Sentiment analysis completed!")
+
+        logging.info("Correlating sentiment with topics...")
+        correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='lda_topic')
+        logging.info("Sentiment correlation with topics completed!")
+    except Exception as e:
+        logging.error(f"Error during sentiment correlation analysis: {e}")
 
     # # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
     # try:

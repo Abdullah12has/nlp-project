@@ -87,7 +87,7 @@ def classify_sentiment(df):
         
         # 5. Add results to dataframe
         df['sentiment'] = np.where(final_score > 0, 'positive', 'negative')
-        df['sentiment_confidence'] = final_score.abs()
+        df['sentiment_confidence'] = final_score
         df['sentiment_agreement'] = agreement
         
         # 6. Create summary
