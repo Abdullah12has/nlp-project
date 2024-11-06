@@ -18,9 +18,10 @@ from scripts.sentiment_analysis import (
     analyze_and_visualize_ngrams
 )
 from scripts.sentiment_correlation import (
-    plot_correlation_heatmap,
     calculate_and_plot_correlations,
+    correlate_sentiment_with_topics,
     encode_categorical_features,
+    plot_sentiment_correlation_heatmap,
     plot_sentiment_distribution,
     perform_pca,
     clean_numeric_columns,
@@ -53,7 +54,7 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/subset_senti_df_10.csv'
+DATA_PATH = 'data/subset_senti_df_100.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -150,15 +151,15 @@ if __name__ == '__main__':
     #     logging.error(f"Error during data exploration: {e}")
 
     # Step 6: Speech Word Frequency Analysis
-#     try:
-#         logging.info("Classifying sentiment and analyzing word frequencies...")
-#         df, sentiment_summary = classify_sentiment(df)
-#         if sentiment_summary:
-#             logging.info("Sentiment Classification Summary:")
-#             for key, value in sentiment_summary.items():
-#                 logging.info(f"{key}: {value}")
-#         else:
-#             logging.error("Sentiment classification failed to produce summary")
+    try:
+        logging.info("Classifying sentiment and analyzing word frequencies...")
+        df, sentiment_summary = classify_sentiment(df)
+        if sentiment_summary:
+            logging.info("Sentiment Classification Summary:")
+            for key, value in sentiment_summary.items():
+                logging.info(f"{key}: {value}")
+        else:
+            logging.error("Sentiment classification failed to produce summary")
         
 #         generate_wordcloud(df, 'positive')
 #         generate_wordcloud(df, 'negative')
@@ -232,10 +233,10 @@ if __name__ == '__main__':
 #         filtered_ngram_analysis(df, 'negative', n=3, feature="party_group", filter_value=2)
 
 
-#         logging.info("Word frequency and n-gram analysis completed!")
+        logging.info("Word frequency and n-gram analysis completed!")
         
-#     except Exception as e:
-#         logging.error(f"Error during sentiment classification or analysis: {e}")
+    except Exception as e:
+        logging.error(f"Error during sentiment classification or analysis: {e}")
 
     # Step 7: Correlation Between Features and Sentiment
     '''
@@ -249,40 +250,42 @@ if __name__ == '__main__':
     #     # Drop rows with NaN in key columns before correlation analysis
     #     df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
         
-#         # Define features to analyze
-#         features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
-#         sentiment_column = 'sentiment_confidence'
-#         sentiment_label_column = 'sentiment'
+    #     # Define features to analyze
+    #     features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
+    #     sentiment_column = 'sentiment_confidence'
+    #     sentiment_label_column = 'sentiment'
         
-#         # Calculate and plot correlations including sentiment classification
-#         correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
+    #     # Calculate and plot correlations including sentiment classification
+    #     correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
         
-#         # Plot sentiment distribution for each categorical feature
-#         categorical_features = ['gender', 'party_group']
-#         for feature in categorical_features:
-#             plot_sentiment_distribution(df, feature, sentiment_label_column)
+    #     # Plot sentiment distribution for each categorical feature
+    #     categorical_features = ['gender', 'party_group']
+    #     for feature in categorical_features:
+    #         plot_sentiment_distribution(df, feature, sentiment_label_column)
         
-#         logging.info("Correlation analysis completed successfully.")
-#     except Exception as e:
-#         logging.error(f"Error during correlation analysis: {e}")
-        
-  # # Step 8: Correlation Heatmap
-    # try:
-    #     logging.info("Calculating and plotting correlation heatmap...")
-    #     sentiment_columns = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
-    #     if all(col in df.columns for col in sentiment_columns):
-    #         plot_correlation_heatmap(df, sentiment_columns)
-    #     else:
-    #         logging.warning("Some sentiment columns are missing; skipping correlation heatmap.")
+    #     logging.info("Correlation analysis completed successfully.")
     # except Exception as e:
     #     logging.error(f"Error during correlation analysis: {e}")
+        
+  # Step 8: Correlation Heatmap
+    # try:
+    #     logging.info("Calculating and plotting correlation heatmap...")
+    #     sentiment_cols = ['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 'sentiword_sentiment', 'hu_sentiment']
+    
+    #     # Check if all required sentiment columns and sentiment confidence column are in df
+        
+    #     plot_sentiment_correlation_heatmap(df)
+       
+    # except Exception as e:
+    #     logging.error(f"Error during correlation analysis: {e}")
+
     # Step 9: Train Topic Models
     '''
     Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BERTopic and then optimize
     hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
     visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
     '''
-    # try:
+    try:
         # logging.info("Training topic models...")
         # lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
         # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
@@ -293,29 +296,29 @@ if __name__ == '__main__':
 #         logging.info("Starting BERTopic model training...")
         
 #         # Train BERTopic model with savepoints
-#         bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+        # bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
-#         print(topics)
-#         # Save topics to DataFrame
-#         df['topic'] = topics
-#         logging.info("BERTopic model training completed!")
+        # print(topics)
+        # # Save topics to DataFrame
+        # df['topic'] = topics
+        # logging.info("BERTopic model training completed!")
 
         # Visualization
-    #     logging.info("Generating visualizations for BERTopic...")
-    #     topic_vis = bertopic_model.visualize_topics()
-    #     topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
+        logging.info("Generating visualizations for BERTopic...")
+        # topic_vis = bertopic_model.visualize_topics()
+        # topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
 
-    #     hierarchy_vis = bertopic_model.visualize_hierarchy()
-    #     hierarchy_vis.write_html("data/bertopic_hierarchy.html")  # Save Topic Hierarchy visualization
+        # hierarchy_vis = bertopic_model.visualize_hierarchy()
+        # hierarchy_vis.write_html("data/bertopic_hierarchy.html")  # Save Topic Hierarchy visualization
 
-    #     heatmap_vis = bertopic_model.visualize_heatmap()
-    #     heatmap_vis.write_html("data/bertopic_heatmap.html")  # Save Topic Similarity Heatmap
+        # heatmap_vis = bertopic_model.visualize_heatmap()
+        # heatmap_vis.write_html("data/bertopic_heatmap.html")  # Save Topic Similarity Heatmap
 
-    #     barchart_vis = bertopic_model.visualize_barchart()
-    #     barchart_vis.write_html("data/bertopic_barchart.html")
+        # barchart_vis = bertopic_model.visualize_barchart()
+        # barchart_vis.write_html("data/bertopic_barchart.html")
 
-    # except Exception as e:
-    #     logging.error(f"Error during topic modeling: {e}")
+    except Exception as e:
+        logging.error(f"Error during topic modeling: {e}")
 
 
     # Step 10: Analyze Topic Evolution
@@ -323,43 +326,43 @@ if __name__ == '__main__':
     6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopic’s
     time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
     '''
-    try:
-        # Dynamic LDA Model Training
-        lda_dynamic_model, lda_vis = train_dynamic_lda_model(df, 'cleaned_text', 'year', num_topics=5, passes=5)
-        logging.info("Dynamic LDA model trained successfully!")
-        # Visualize Dynamic LDA
-        print("LDA Visualization: ")
-        pyLDAvis.save_html(lda_vis, 'graphs/lda_dynamic_visualization.html')
-        print("LDA visualization saved to 'lda_visualization.html'. Open this file in a browser to view.")
-        # Assign topics from LDA to DataFrame
-        df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
-        logging.info("LDA topic assignments added to DataFrame.")
-        # BERTopic Model with Time Evolution
-        logging.info("Training BERTopic model with time evolution...")
-        bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
-        logging.info("BERTopic model with time evolution trained successfully!")
-        # Assign topics from BERTopic to DataFrame
-        df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
-        logging.info("BERTopic topic assignments added to DataFrame.")
-        # Analyze Topic Trends for LDA
-        logging.info("Analyzing LDA topic trends over time...")
-        lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
-        visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
-        logging.info("LDA topic trend visualization completed.")
-        # Analyze Topic Trends for BERTopic
-        logging.info("Analyzing BERTopic trends over time...")
-        bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
-        visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
-        logging.info("BERTopic topic trend visualization completed.")
-        logging.info("Topic evolution analysis completed successfully.")
-    except Exception as e:
-        logging.error(f"Error during topic evolution analysis: {e}")
+    # try:
+    #     # Dynamic LDA Model Training
+    #     lda_dynamic_model, lda_vis = train_dynamic_lda_model(df, 'cleaned_text', 'year', num_topics=5, passes=5)
+    #     logging.info("Dynamic LDA model trained successfully!")
+    #     # Visualize Dynamic LDA
+    #     print("LDA Visualization: ")
+    #     pyLDAvis.save_html(lda_vis, 'graphs/lda_dynamic_visualization.html')
+    #     print("LDA visualization saved to 'lda_visualization.html'. Open this file in a browser to view.")
+    #     # Assign topics from LDA to DataFrame
+    #     df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
+    #     logging.info("LDA topic assignments added to DataFrame.")
+    #     # BERTopic Model with Time Evolution
+    #     logging.info("Training BERTopic model with time evolution...")
+    #     bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
+    #     logging.info("BERTopic model with time evolution trained successfully!")
+    #     # Assign topics from BERTopic to DataFrame
+    #     df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
+    #     logging.info("BERTopic topic assignments added to DataFrame.")
+    #     # Analyze Topic Trends for LDA
+    #     logging.info("Analyzing LDA topic trends over time...")
+    #     lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
+    #     visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
+    #     logging.info("LDA topic trend visualization completed.")
+    #     # Analyze Topic Trends for BERTopic
+    #     logging.info("Analyzing BERTopic trends over time...")
+    #     bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
+    #     visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
+    #     logging.info("BERTopic topic trend visualization completed.")
+    #     logging.info("Topic evolution analysis completed successfully.")
+    # except Exception as e:
+    #     logging.error(f"Error during topic evolution analysis: {e}")
 
 
     # # Step 11: Sentiment Correlation with Topics
     # try:
     #     logging.info("Correlating sentiment with topics...")
-    #     correlate_sentiment_with_topics(df, sentiment_column=SENTIMENT_SCORE_COLUMN, topic_column='topic')
+    #     correlate_sentiment_with_topics(df, sentiment_column="sentiment_confidence", topic_column='topic') #sentiment_confidence try 
     #     logging.info("Sentiment correlation with topics completed!")
     # except Exception as e:
     #     logging.error(f"Error during sentiment correlation analysis: {e}")
@@ -375,65 +378,66 @@ if __name__ == '__main__':
     # except Exception as e:
     #     logging.error(f"Error during sentiment model comparison: {e}")
 
-    # # Step 13: Sentiment Prediction Using Extracted Features
-    # try:
-    #     logging.info("Training sentiment classification models...")
-    #     train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
-    #     train_sentiment_model_with_bert(df, 'cleaned_text', 'sentiment')  # BERT Model
-    #     logging.info("Sentiment prediction model training completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during sentiment prediction: {e}")
+    # Step 13: Sentiment Prediction Using Extracted Features
+
+    try:
+        logging.info("Training sentiment classification models...")
+        train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
+        train_sentiment_model_with_bert(df, 'cleaned_text', 'sentiment')  # BERT Model
+        logging.info("Sentiment prediction model training completed!")
+    except Exception as e:
+        logging.error(f"Error during sentiment prediction: {e}")
 
     # # Step 14: Topic Distributions Across Political Parties and Speakers
-    # try:
-    #     logging.info("Analyzing topic distributions across parties and speakers...")
-    #     analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
-    #     logging.info("Topic distribution analysis completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during topic distribution analysis: {e}")
+    try:
+        logging.info("Analyzing topic distributions across parties and speakers...")
+        analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
+        logging.info("Topic distribution analysis completed!")
+    except Exception as e:
+        logging.error(f"Error during topic distribution analysis: {e}")
 
     # # Step 15: Explore LLM and Transformers
-    # try:
-    #     logging.info("Exploring sentiment analysis with LLMs and transformers...")
-    #     # Explicitly set device and manage memory better
-    #     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-    #     logging.info(f"Using device: {device}")
+    try:
+        logging.info("Exploring sentiment analysis with LLMs and transformers...")
+        # Explicitly set device and manage memory better
+        device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        logging.info(f"Using device: {device}")
         
-    #     # Set smaller batch size and add padding
-    #     classifier = pipeline(
-    #         "sentiment-analysis",
-    #         model="distilbert-base-uncased-finetuned-sst-2-english",
-    #         device=device,
-    #         batch_size=4,  # Reduced batch size
-    #         padding=True,
-    #         truncation=True,
-    #         max_length=512  # Limit input length
-    #     )
+        # Set smaller batch size and add padding
+        classifier = pipeline(
+            "sentiment-analysis",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            device=device,
+            batch_size=4,  # Reduced batch size
+            padding=True,
+            truncation=True,
+            max_length=512  # Limit input length
+        )
         
-    #     # Process in smaller chunks to avoid memory issues
-    #     chunk_size = 100
-    #     results = []
-    #     for i in range(0, len(df), chunk_size):
-    #         chunk = df[TEXT_COLUMN].iloc[i:i+chunk_size].tolist()
-    #         chunk_results = explore_llm_transformers(chunk, classifier)
-    #         results.extend(chunk_results)
+        # Process in smaller chunks to avoid memory issues
+        chunk_size = 100
+        results = []
+        for i in range(0, len(df), chunk_size):
+            chunk = df[TEXT_COLUMN].iloc[i:i+chunk_size].tolist()
+            chunk_results = explore_llm_transformers(chunk, classifier)
+            results.extend(chunk_results)
             
-    #         # Clear memory after each chunk
-    #         if device != "cpu":
-    #             torch.cuda.empty_cache()
-    #         gc.collect()
+            # Clear memory after each chunk
+            if device != "cpu":
+                torch.cuda.empty_cache()
+            gc.collect()
         
-    #     df['llm_sentiment'] = results
-    #     logging.info("LLM and transformer exploration completed!")
+        df['llm_sentiment'] = results
+        logging.info("LLM and transformer exploration completed!")
         
-    # except Exception as e:
-    #     logging.error(f"Error during LLM exploration: {e}")
-    #     logging.warning("Skipping LLM exploration due to error")
-    # finally:
-    #     # Cleanup
-    #     if device != "cpu":
-    #         torch.cuda.empty_cache()
-    #     gc.collect()
+    except Exception as e:
+        logging.error(f"Error during LLM exploration: {e}")
+        logging.warning("Skipping LLM exploration due to error")
+    finally:
+        # Cleanup
+        if device != "cpu":
+            torch.cuda.empty_cache()
+        gc.collect()
 
     # # Final execution time
     # execution_time = time.time() - start_time

@@ -14,12 +14,39 @@ def encode_categorical_features(df, categorical_features):
         if feature in df.columns and df[feature].notnull().all():
             df[feature] = pd.Categorical(df[feature]).codes
     return df
-def plot_correlation_heatmap(df, sentiment_columns):
-    correlation_matrix = df[sentiment_columns].corr()
-    plt.figure(figsize=(12, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
-    plt.title('Correlation Heatmap of Sentiment Scores')
+
+def plot_sentiment_correlation_heatmap(df):
+    """
+    Plots a correlation heatmap for the top 50 values of various sentiment columns and 'sentiment_confidence'.
+    
+    Parameters:
+    df (pd.DataFrame): DataFrame containing the sentiment columns and 'sentiment_confidence'.
+    """
+    # List of required columns
+    sentiment_columns = [
+        'afinn_sentiment', 'bing_sentiment', 'nrc_sentiment', 
+        'sentiword_sentiment', 'hu_sentiment', 'sentiment_confidence'
+    ]
+    
+    # Ensure all required columns exist in the DataFrame
+    missing_cols = [col for col in sentiment_columns if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"DataFrame must contain columns: {missing_cols}")
+    
+    # Select top 50 rows based on 'sentiment_confidence' (or another column if preferred)
+    top_50_df = df.nlargest(50, 'sentiment_confidence')
+    
+    # Calculate the correlation matrix for the top 50 rows
+    correlation_matrix = top_50_df[sentiment_columns].corr()
+    
+    # Plot heatmap
+    plt.figure(figsize=(10, 8))  # Adjust figure size for readability
+    sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1)
+    plt.title('Correlation Heatmap ')
     plt.show()
+
+
+
 
 def correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topic_column='topic'):
     """
