@@ -1,3 +1,4 @@
+import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import logging
@@ -23,39 +24,52 @@ def plot_correlation_heatmap(df, sentiment_columns):
     plt.title('Correlation Heatmap of Sentiment Scores')
     plt.show()
 
-def correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='topic'):
+
+
+def correlate_sentiment_with_topics(df, topic_column='bertopic_topic', sentiment_column='sentiment_score', time_column=None, output_dir='outputT7'):
     """
     Correlate sentiment scores with topics and visualize the results.
     
     Args:
         df (pd.DataFrame): DataFrame containing sentiment and topic information.
+        topic_column (str): Name of the column with BERTopic topics.
         sentiment_column (str): Name of the column with sentiment scores.
-        topic_column (str): Name of the column with topic information.
+        time_column (str, optional): Name of the column with timestamps (if analyzing over time).
+        output_dir (str): Directory to save visualization output.
     """
-    # Grouping by topic and calculating mean sentiment
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # 1. Group by topic and calculate mean sentiment
     sentiment_by_topic = df.groupby(topic_column)[sentiment_column].mean().reset_index()
-
-    # Create a bar plot for mean sentiment score by topic
+    
+    # Plotting mean sentiment score by topic
     plt.figure(figsize=(12, 6))
-    sns.barplot(data=sentiment_by_topic, x=topic_column, y=sentiment_column, palette='coolwarm')
-    plt.title('Mean Sentiment Confidence by Topic')
+    sns.barplot(data=sentiment_by_topic[1:50], x=topic_column, y=sentiment_column, palette='coolwarm')
+    plt.title('Mean Sentiment Score by Topic')
     plt.xlabel('Topic')
-    plt.ylabel('Mean Sentiment Confidence')
+    plt.ylabel('Mean Sentiment Score')
     plt.xticks(rotation=45)
-    plt.axhline(0, color='gray', linestyle='--', linewidth=1)  # Add a line at 0 for reference
+    plt.axhline(0, color='gray', linestyle='--', linewidth=1)
     plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'mean_sentiment_by_topic.png'))
     plt.show()
 
-    # Optional: Analyze sentiment distribution for each topic
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=df, x=topic_column, y=sentiment_column, palette='coolwarm')
-    plt.title('Sentiment Confidence Distribution by Topic')
-    plt.xlabel('Topic')
-    plt.ylabel('Sentiment Confidence')
-    plt.xticks(rotation=45)
-    plt.axhline(0, color='gray', linestyle='--', linewidth=1)  # Add a line at 0 for reference
-    plt.tight_layout()
-    plt.show()
+
+    # Optional: 3. Analyze sentiment trends over time within each topic
+    if time_column:
+        sentiment_time_topic = df.groupby([time_column, topic_column])[sentiment_column].mean().unstack(fill_value=0)
+        
+        plt.figure(figsize=(15, 8))
+        for topic in sentiment_time_topic.columns[1:10]:
+            plt.plot(sentiment_time_topic.index, sentiment_time_topic[topic], label=f'Topic {topic}')
+        
+        plt.title('Sentiment Trends Over Time by Topic')
+        plt.xlabel('Time')
+        plt.ylabel('Mean Sentiment Score')
+        plt.legend(title='Topics')
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, 'sentiment_trends_over_time.png'))
+        plt.show()
     
 def analyze_sentiment(df, text_column, sentiment_column='sentiment_score'):
     """

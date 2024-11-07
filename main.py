@@ -67,81 +67,81 @@ if __name__ == '__main__':
     start_time = time.time()  # Start the timer
 
     # Step 1: Load Data
-    try:
-        logging.info("Loading data...")
+    # try:
+    #     logging.info("Loading data...")
         
-        # Check if DATA_PATH is defined and valid
-        if not os.path.exists(DATA_PATH):
-            logging.error("DATA_PATH is not defined or the file does not exist.")
-            raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
+    #     # Check if DATA_PATH is defined and valid
+    #     if not os.path.exists(DATA_PATH):
+    #         logging.error("DATA_PATH is not defined or the file does not exist.")
+    #         raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
         
-        df = pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
+    #     df = pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
         
-        # Drop rows with missing sentiment values
-        df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
+    #     # Drop rows with missing sentiment values
+    #     df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
         
-        # If in DEBUG_MODE, take a sample of the data
-        if DEBUG_MODE:
-            df = df.sample(n=min(1000, len(df)))  # Adjust sample size as needed
+    #     # If in DEBUG_MODE, take a sample of the data
+    #     if DEBUG_MODE:
+    #         df = df.sample(n=min(1000, len(df)))  # Adjust sample size as needed
         
-        logging.info("Data loaded successfully!")
-        logging.info(f"Data types:\n{df.dtypes}")
+    #     logging.info("Data loaded successfully!")
+    #     logging.info(f"Data types:\n{df.dtypes}")
 
-        # Handle speech_date conversion
-        if 'speech_date' in df.columns:
-            df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce')
-            if df['speech_date'].isnull().any():
-                logging.warning("Some 'speech_date' entries were coerced to NaT.")
-            df['party'] = df['party'].astype(str)
-            df['speech_date'] = df['speech_date'].view(np.int64) // 10**9  # Convert to seconds since epoch
+    #     # Handle speech_date conversion
+    #     if 'speech_date' in df.columns:
+    #         df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce')
+    #         if df['speech_date'].isnull().any():
+    #             logging.warning("Some 'speech_date' entries were coerced to NaT.")
+    #         df['party'] = df['party'].astype(str)
+    #         df['speech_date'] = df['speech_date'].view(np.int64) // 10**9  # Convert to seconds since epoch
 
-        # Handle time conversion
-        if 'time' in df.columns:
-            df['time'] = pd.to_numeric(df['time'], errors='coerce')
-            if df['time'].isnull().any():
-                logging.warning("Some 'time' entries were coerced to NaN.")
+    #     # Handle time conversion
+    #     if 'time' in df.columns:
+    #         df['time'] = pd.to_numeric(df['time'], errors='coerce')
+    #         if df['time'].isnull().any():
+    #             logging.warning("Some 'time' entries were coerced to NaN.")
 
-    except Exception as e:
-        logging.error(f"Error loading data: {e}")
-        raise
+    # except Exception as e:
+    #     logging.error(f"Error loading data: {e}")
+    #     raise
 
     # Step 2: Encode Categorical Features
-    categorical_features = ['gender', 'party_group']
-    df = encode_categorical_features(df, categorical_features)
+    # categorical_features = ['gender', 'party_group']
+    # df = encode_categorical_features(df, categorical_features)
 
     # Step 3: Handle Missing Values
-    try:
-        logging.info("Checking for missing values in the DataFrame...")
-        missing_values = df.isnull().sum()
-        logging.info(f"Missing values in each column:\n{missing_values[missing_values > 0]}")
+    # try:
+    #     logging.info("Checking for missing values in the DataFrame...")
+    #     missing_values = df.isnull().sum()
+    #     logging.info(f"Missing values in each column:\n{missing_values[missing_values > 0]}")
 
-        if df['year'].isnull().any():
-            logging.warning("Missing values found in 'year' column; filling with median.")
-            df['year'].fillna(df['year'].median(), inplace=True)
+    #     if df['year'].isnull().any():
+    #         logging.warning("Missing values found in 'year' column; filling with median.")
+    #         df['year'].fillna(df['year'].median(), inplace=True)
 
-        if df['gender'].isnull().any():
-            logging.warning("Missing values found in 'gender' column; filling with 'Unknown'.")
-            df['gender'].fillna('Unknown', inplace=True)
+    #     if df['gender'].isnull().any():
+    #         logging.warning("Missing values found in 'gender' column; filling with 'Unknown'.")
+    #         df['gender'].fillna('Unknown', inplace=True)
 
-        if df['party_group'].isnull().any():
-            logging.warning("Missing values found in 'party_group' column; filling with 'Unknown'.")
-            df['party_group'].fillna('Unknown', inplace=True)
+    #     if df['party_group'].isnull().any():
+    #         logging.warning("Missing values found in 'party_group' column; filling with 'Unknown'.")
+    #         df['party_group'].fillna('Unknown', inplace=True)
 
-        logging.info("Missing values handled successfully.")
+    #     logging.info("Missing values handled successfully.")
         
-    except Exception as e:
-        logging.error(f"Error handling missing values: {e}")
-        raise
+    # except Exception as e:
+    #     logging.error(f"Error handling missing values: {e}")
+    #     raise
 
     # Step 4: Text Preprocessing
-    try:
-        logging.info("Starting text preprocessing...")
-        preprocessor = TextPreprocessor()
-        df['cleaned_text'] = df[TEXT_COLUMN].apply(preprocessor.clean_text)
-        logging.info("Text preprocessing completed!")
-    except Exception as e:
-        logging.error(f"Error during text preprocessing: {e}")
-        raise
+    # try:
+    #     logging.info("Starting text preprocessing...")
+    #     preprocessor = TextPreprocessor()
+    #     df['cleaned_text'] = df[TEXT_COLUMN].apply(preprocessor.clean_text)
+    #     logging.info("Text preprocessing completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during text preprocessing: {e}")
+    #     raise
 
     # # Step 5: Initial Data Exploration
     # try:
@@ -154,34 +154,34 @@ if __name__ == '__main__':
     #     logging.error(f"Error during data exploration: {e}")
 
     # Step 6: Speech Word Frequency Analysis
-#     try:
-#         logging.info("Classifying sentiment and analyzing word frequencies...")
-#         df, sentiment_summary = classify_sentiment(df)
-#         if sentiment_summary:
-#             logging.info("Sentiment Classification Summary:")
-#             for key, value in sentiment_summary.items():
-#                 logging.info(f"{key}: {value}")
-#         else:
-#             logging.error("Sentiment classification failed to produce summary")
+    # try:
+    #     logging.info("Classifying sentiment and analyzing word frequencies...")
+    #     df, sentiment_summary = classify_sentiment(df)
+    #     if sentiment_summary:
+    #         logging.info("Sentiment Classification Summary:")
+    #         for key, value in sentiment_summary.items():
+    #             logging.info(f"{key}: {value}")
+    #     else:
+    #         logging.error("Sentiment classification failed to produce summary")
         
-#         generate_wordcloud(df, 'positive')
-#         generate_wordcloud(df, 'negative')
+        # generate_wordcloud(df, 'positive')
+        # generate_wordcloud(df, 'negative')
 
-#         # Plot most common words for each sentiment
-#         logging.info("Plotting most common words for positive speeches...")
-#         plot_most_common_words(df, 'positive')
-#         logging.info("Plotting most common words for negative speeches...")
-#         plot_most_common_words(df, 'negative')
+        # # Plot most common words for each sentiment
+        # logging.info("Plotting most common words for positive speeches...")
+        # plot_most_common_words(df, 'positive')
+        # logging.info("Plotting most common words for negative speeches...")
+        # plot_most_common_words(df, 'negative')
     
-#         logging.info("Word frequency and sentiment analysis completed!")
+        # logging.info("Word frequency and sentiment analysis completed!")
 
-#         logging.info("Running bi-gram analysis...") 
-#         bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
-#         bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
+        # logging.info("Running bi-gram analysis...") 
+        # bigramPositive = ngram_analysis(df, 'positive', 2)  # Bi-gram analysis for positive speeches
+        # bigramNegative = ngram_analysis(df, 'negative', 2)  # Bi-gram analysis for negative speeches
 
-#         logging.info("Running tri-gram analysis...") 
-#         trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
-#         trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
+        # logging.info("Running tri-gram analysis...") 
+        # trigramPositive = ngram_analysis(df, 'positive', 3)  # Tri-gram analysis for positive speeches
+        # trigramNegative = ngram_analysis(df, 'negative', 3)  # Tri-gram analysis for negative speeches
 
 #         plot_ngram_analysis(bigramPositive, "Top 10 Bigrams in Positive Speeches")
 #         plot_ngram_analysis(bigramNegative, "Top 10 Bigrams in Negative Speeches")
@@ -238,8 +238,8 @@ if __name__ == '__main__':
 
 #         logging.info("Word frequency and n-gram analysis completed!")
         
-#     except Exception as e:
-#         logging.error(f"Error during sentiment classification or analysis: {e}")
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment classification or analysis: {e}")
 
     # Step 7: Correlation Between Features and Sentiment
     '''
@@ -253,22 +253,22 @@ if __name__ == '__main__':
     #     # Drop rows with NaN in key columns before correlation analysis
     #     df = df.dropna(subset=['year', 'gender', 'party_group', 'sentiment_confidence'])
         
-#         # Define features to analyze
-#         features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
-#         sentiment_column = 'sentiment_confidence'
-#         sentiment_label_column = 'sentiment'
+    #     # Define features to analyze
+    #     features_to_analyze = ['speech_date', 'year', 'gender', 'party_group']
+    #     sentiment_column = 'sentiment_confidence'
+    #     sentiment_label_column = 'sentiment'
         
-#         # Calculate and plot correlations including sentiment classification
-#         correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
+    #     # Calculate and plot correlations including sentiment classification
+    #     correlation_results = calculate_and_plot_correlations(df, features_to_analyze, sentiment_column, sentiment_label_column)
         
-#         # Plot sentiment distribution for each categorical feature
-#         categorical_features = ['gender', 'party_group']
-#         for feature in categorical_features:
-#             plot_sentiment_distribution(df, feature, sentiment_label_column)
+    #     # Plot sentiment distribution for each categorical feature
+    #     categorical_features = ['gender', 'party_group']
+    #     for feature in categorical_features:
+    #         plot_sentiment_distribution(df, feature, sentiment_label_column)
         
-#         logging.info("Correlation analysis completed successfully.")
-#     except Exception as e:
-#         logging.error(f"Error during correlation analysis: {e}")
+    #     logging.info("Correlation analysis completed successfully.")
+    # except Exception as e:
+    #     logging.error(f"Error during correlation analysis: {e}")
         
   # # Step 8: Correlation Heatmap
     # try:
@@ -327,51 +327,65 @@ if __name__ == '__main__':
     6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopics
     time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
     '''
-    try:
+    # try:
         
-        logging.info("Task 6: LDA training")
-        # lda_model, df, topic_names = train_and_visualize_lda(df, text_column='cleaned_text', time_column='year')
-        # visualize_topic_trends(df, topic_column='lda_topic', time_column='year', topic_names=topic_names)
+    #     logging.info("Task 6: LDA training")
+    #     lda_model, df, topic_names = train_and_visualize_lda(df, text_column='cleaned_text', time_column='year')
+    #     # visualize_topic_trends(df, topic_column='lda_topic', time_column='year', topic_names=topic_names)
 
-        logging.info("Task 6: BERTopic training")
-        bertopic_model, df = train_and_visualize_bertopic(df)
+    #     logging.info("Task 6: BERTopic training")
+    #     bertopic_model, df = train_and_visualize_bertopic(df)
        
-       
-        # visualize_topic_trends(df, 'bertopic_topic', 'year')
+    #     df.to_pickle("dataframe.pkl")
+    #     # visualize_topic_trends(df, 'bertopic_topic', 'year')
 
-    except Exception as e:
-        logging.error(f"Error during topic evolution analysis: {e}")
+    # except Exception as e:
+    #     logging.error(f"Error during topic evolution analysis: {e}")
 
 
     # Step 11: Sentiment Correlation with Topics
     '''
-    Sentiment Correlation with Topics: Perform sentiment analysis on debate transcripts using VADER or TextBlob, with
+    7. Sentiment Correlation with Topics: Perform sentiment analysis on debate transcripts using VADER or TextBlob, with
     potential fine-tuning for parliamentary language. Correlate sentiment trends with identified topics, highlighting emotional
     patterns and contextual nuances like sarcasm or negation.
     
     '''
-    try:
-        logging.info("Analyzing sentiment...")
-        df, summary = classify_sentiment(df)
-        df = analyze_sentiment(df, text_column='cleaned_text') 
-        logging.info("Sentiment analysis completed!")
+    # try:
+    #     df = pd.read_pickle("dataframe.pkl")
+    #     # print(df)
 
-        logging.info("Correlating sentiment with topics...")
-        correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='lda_topic')
-        logging.info("Sentiment correlation with topics completed!")
-    except Exception as e:
-        logging.error(f"Error during sentiment correlation analysis: {e}")
+
+    #     logging.info("Analyzing sentiment...")
+    #     # df, summary = classify_sentiment(df)
+    #     df = analyze_sentiment(df, text_column='cleaned_text') 
+    #     logging.info("Sentiment analysis completed!")
+    #     print(df["sentiment_score"])
+
+    #     logging.info("Correlating sentiment with topics...")
+    #     # correlate_sentiment_with_topics(df, sentiment_column='sentiment_score', topic_column='bertopic_topic')
+    #     correlate_sentiment_with_topics(df, topic_column='bertopic_topic', sentiment_column='sentiment_score', time_column="year", output_dir='outputT7')
+    #     logging.info("Sentiment correlation with topics completed!")
+
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment correlation analysis: {e}")
 
     # # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
-    # try:
-    #     logging.info("Comparing pre-trained sentiment models with ground truth...")
-    #     # Add device specification and batch size
-    #     device = "cuda" if torch.cuda.is_available() else "cpu"
-    #     classifier = pipeline("sentiment-analysis", device=device)
-    #     df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN)
-    #     logging.info("Pre-trained sentiment models comparison completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during sentiment model comparison: {e}")
+    '''
+    
+    '''
+    try:
+        df = pd.read_pickle("dataframe.pkl")
+        logging.info("Comparing pre-trained sentiment models with ground truth...")
+        # Add device specification and batch size
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        classifier = pipeline("sentiment-analysis", device=device)
+        df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN) # using afinn need to normalize both the vals
+        # df.to_pickle("dataframe.pkl")
+        high_error_vader = df[df['vader_error'] > 0.5]
+        print("High Error Cases for VADER:", high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']])
+        logging.info("Pre-trained sentiment models comparison completed!")
+    except Exception as e:
+        logging.error(f"Error during sentiment model comparison: {e}")
 
     # Step 13: Sentiment Prediction Using Extracted Features
     # try:
