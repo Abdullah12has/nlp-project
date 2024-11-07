@@ -3,6 +3,7 @@ import pandas as pd
 import logging
 
 import pyLDAvis
+from scripts.task6 import train_and_visualize_bertopic, train_and_visualize_lda
 from scripts.text_preprocessing import TextPreprocessor
 from scripts.data_exploration import plot_feature_distribution
 from scripts.sentiment_analysis import (
@@ -55,7 +56,8 @@ import gc
 logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
-DATA_PATH = 'data/subset_senti_df_10.csv'
+# DATA_PATH = 'data/subset_senti_df_100.csv'
+DATA_PATH = 'data/senti_df_main.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -280,31 +282,31 @@ if __name__ == '__main__':
     #     logging.error(f"Error during correlation analysis: {e}")
     # Step 9: Train Topic Models
     '''
-    Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BERTopic and then optimize
+    5 Topic Modeling with LDA and BERTopic: Implement topic modeling using LDA and BERTopic and then optimize
     hyperparameters for both models using coherence scores (e.g., Cv measure) to ensure optimal topic extraction. Use
     visualization tools like pyLDAvis and BERTopic's built-in functions for interactive topic exploration.
     '''
     # try:
-        # logging.info("Training topic models...")
-        # lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
-        # pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
-        # pyLDAvis.display(vis)
-        # logging.info("LDA model training completed!")
-        # print(ldatopics)
+    #     logging.info("Training topic models...")
+    #     lda_model, dictionary, corpus, vis, ldatopics = train_lda_model(df, 'cleaned_text', 2, 10, 10)
+    #     pyLDAvis.save_html(vis, 'graphs/lda_visualization.html')
+    #     pyLDAvis.display(vis)
+    #     logging.info("LDA model training completed!")
+    #     print(ldatopics)
 
-#         logging.info("Starting BERTopic model training...")
+    #     logging.info("Starting BERTopic model training...")
         
-#         # Train BERTopic model with savepoints
-#         bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+    #     # Train BERTopic model with savepoints
+        # bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
-#         print(topics)
-#         # Save topics to DataFrame
-#         df['topic'] = topics
-#         logging.info("BERTopic model training completed!")
+    #     print(topics)
+    #     # Save topics to DataFrame
+    #     df['topic'] = topics
+    #     logging.info("BERTopic model training completed!")
 
-        # Visualization
+    #     # Visualization
     #     logging.info("Generating visualizations for BERTopic...")
-    #     topic_vis = bertopic_model.visualize_topics()
+        # topic_vis = bertopic_model.visualize_topics()
     #     topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
 
     #     hierarchy_vis = bertopic_model.visualize_hierarchy()
@@ -322,55 +324,36 @@ if __name__ == '__main__':
 
     # Step 10: Analyze Topic Evolution
     '''
-    6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopic’s
+    6- Topic Evolution Over Time: Track how topics evolve over time using Dynamic Topic Modeling (LDA) and BERTopics
     time-based analysis. Try to visualize topic trends using dynamic topic models to study policy shifts.
     '''
     try:
-        # Dynamic LDA Model Training
-        lda_dynamic_model, lda_vis = train_dynamic_lda_model(df, 'cleaned_text', 'year', num_topics=5, passes=5)
-        logging.info("Dynamic LDA model trained successfully!")
-        # Visualize Dynamic LDA
-        print("LDA Visualization: ")
-        pyLDAvis.save_html(lda_vis, 'graphs/lda_dynamic_visualization.html')
-        print("LDA visualization saved to 'lda_visualization.html'. Open this file in a browser to view.")
-        # Assign topics from LDA to DataFrame
-        df['lda_topic'] = get_lda_topic_assignments(lda_dynamic_model, df['cleaned_text'])
-        print(df['lda_topic'])
-        logging.info("LDA topic assignments added to DataFrame.")
-        # BERTopic Model with Time Evolution
-        # logging.info("Training BERTopic model with time evolution...")
-        # bertopic_model_over_time, topics, probs = train_bertopic_model_over_time(df['cleaned_text'], 'year', min_topic_size=5)
-        # logging.info("BERTopic model with time evolution trained successfully!")
-        # # Assign topics from BERTopic to DataFrame
-        # df['bertopic_topic'], _ = bertopic_model_over_time.transform(df['cleaned_text'])
-        # logging.info("BERTopic topic assignments added to DataFrame.")
-        # # Analyze Topic Trends for LDA
-        # logging.info("Analyzing LDA topic trends over time...")
-        # lda_topic_trends = analyze_topic_evolution(df, topic_column='lda_topic', time_column='year')
-        # visualize_topic_trends_over_time(lda_topic_trends, save_path='graphs/lda_topic_trends_over_time.png')
-        # logging.info("LDA topic trend visualization completed.")
-        # # Analyze Topic Trends for BERTopic
-        # logging.info("Analyzing BERTopic trends over time...")
-        # bertopic_trends = analyze_topic_evolution(df, topic_column='bertopic_topic', time_column='year')
-        # visualize_topic_trends_over_time(bertopic_trends, save_path='graphs/bertopic_topic_trends_over_time.png')
-        # logging.info("BERTopic topic trend visualization completed.")
-        # logging.info("Topic evolution analysis completed successfully.")
+        
+        # logging.info("Task 6: LDA training")
+        # lda_model, df = train_and_visualize_lda(df)
+        logging.info("Task 6: BERTopic training")
+        bertopic_model, df = train_and_visualize_bertopic(df)
+    
+        # Visualize topic trends for both LDA and BERTopic
+        # visualize_topic_trends(df, 'lda_topic', 'year')
+        # visualize_topic_trends(df, 'bertopic_topic', 'year')
+
     except Exception as e:
         logging.error(f"Error during topic evolution analysis: {e}")
 
 
-    # # Step 11: Sentiment Correlation with Topics
-    try:
-        logging.info("Analyzing sentiment...")
-        df, summary = classify_sentiment(df)
-        df = analyze_sentiment(df, text_column='cleaned_text') 
-        logging.info("Sentiment analysis completed!")
+    # Step 11: Sentiment Correlation with Topics
+    # try:
+    #     logging.info("Analyzing sentiment...")
+    #     df, summary = classify_sentiment(df)
+    #     df = analyze_sentiment(df, text_column='cleaned_text') 
+    #     logging.info("Sentiment analysis completed!")
 
-        logging.info("Correlating sentiment with topics...")
-        correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='lda_topic')
-        logging.info("Sentiment correlation with topics completed!")
-    except Exception as e:
-        logging.error(f"Error during sentiment correlation analysis: {e}")
+    #     logging.info("Correlating sentiment with topics...")
+    #     correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='lda_topic')
+    #     logging.info("Sentiment correlation with topics completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment correlation analysis: {e}")
 
     # # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
     # try:
@@ -383,7 +366,7 @@ if __name__ == '__main__':
     # except Exception as e:
     #     logging.error(f"Error during sentiment model comparison: {e}")
 
-    # # Step 13: Sentiment Prediction Using Extracted Features
+    # Step 13: Sentiment Prediction Using Extracted Features
     # try:
     #     logging.info("Training sentiment classification models...")
     #     train_sentiment_model_with_word2vec(df, 'cleaned_text', 'sentiment')  # Word2Vec Model
@@ -392,15 +375,16 @@ if __name__ == '__main__':
     # except Exception as e:
     #     logging.error(f"Error during sentiment prediction: {e}")
 
-    # # Step 14: Topic Distributions Across Political Parties and Speakers
+    # Step 14: Topic Distributions Across Political Parties and Speakers
     # try:
     #     logging.info("Analyzing topic distributions across parties and speakers...")
-    #     analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'proper_name'], topic_model=bertopic_model)
+    #     analyze_topic_distribution_with_representation(df, topic_column='bertopic_topic', group_columns=['party_group', 'proper_name'])
     #     logging.info("Topic distribution analysis completed!")
     # except Exception as e:
     #     logging.error(f"Error during topic distribution analysis: {e}")
 
-    # # Step 15: Explore LLM and Transformers
+    # Step 15: Explore LLM and Transformers
+
     # try:
     #     logging.info("Exploring sentiment analysis with LLMs and transformers...")
     #     # Explicitly set device and manage memory better
