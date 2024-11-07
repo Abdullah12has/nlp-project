@@ -57,7 +57,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
 # DATA_PATH = 'data/subset_senti_df_100.csv'
-DATA_PATH = 'data/subset_senti_df_100.csv'
+DATA_PATH = 'data/subset_senti_df_10.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -66,7 +66,7 @@ DEBUG_MODE = False  # Set to True to enable debug testing
 if __name__ == '__main__':
     start_time = time.time()  # Start the timer
 
-    # Step 1: Load Data
+    # # Step 1: Load Data
     # try:
     #     logging.info("Loading data...")
         
@@ -105,11 +105,11 @@ if __name__ == '__main__':
     #     logging.error(f"Error loading data: {e}")
     #     raise
 
-    # Step 2: Encode Categorical Features
+    # # Step 2: Encode Categorical Features
     # categorical_features = ['gender', 'party_group']
     # df = encode_categorical_features(df, categorical_features)
 
-    # Step 3: Handle Missing Values
+    # # Step 3: Handle Missing Values
     # try:
     #     logging.info("Checking for missing values in the DataFrame...")
     #     missing_values = df.isnull().sum()
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     #     logging.error(f"Error handling missing values: {e}")
     #     raise
 
-    # Step 4: Text Preprocessing
+    # # Step 4: Text Preprocessing
     # try:
     #     logging.info("Starting text preprocessing...")
     #     preprocessor = TextPreprocessor()
@@ -297,7 +297,7 @@ if __name__ == '__main__':
     #     logging.info("Starting BERTopic model training...")
         
     #     # Train BERTopic model with savepoints
-        # bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+    #     bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
     #     print(topics)
     #     # Save topics to DataFrame
@@ -306,7 +306,7 @@ if __name__ == '__main__':
 
     #     # Visualization
     #     logging.info("Generating visualizations for BERTopic...")
-        # topic_vis = bertopic_model.visualize_topics()
+    #     topic_vis = bertopic_model.visualize_topics()
     #     topic_vis.write_html("data/bertopic_topics.html")  # Save General Topic visualization
 
     #     hierarchy_vis = bertopic_model.visualize_hierarchy()
@@ -317,6 +317,7 @@ if __name__ == '__main__':
 
     #     barchart_vis = bertopic_model.visualize_barchart()
     #     barchart_vis.write_html("data/bertopic_barchart.html")
+    #     # df.to_pickle("dataframe.pkl")
 
     # except Exception as e:
     #     logging.error(f"Error during topic modeling: {e}")
@@ -380,28 +381,28 @@ if __name__ == '__main__':
     other linguistic features, where the models tend to perform poorly.
     
     '''
-    try:
-        df = pd.read_pickle("dataframe.pkl")
-        logging.info("Comparing pre-trained sentiment models with ground truth...")
+    # try:
+    #     df = pd.read_pickle("dataframe.pkl")
+    #     logging.info("Comparing pre-trained sentiment models with ground truth...")
     
-        # Add device specification and batch size
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        classifier = pipeline("sentiment-analysis", device=device)
+    #     # Add device specification and batch size
+    #     device = "cuda" if torch.cuda.is_available() else "cpu"
+    #     classifier = pipeline("sentiment-analysis", device=device)
     
-        # Perform sentiment model comparison
-        df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN) # using afinn need to normalize both the vals
+    #     # Perform sentiment model comparison
+    #     df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN) # using afinn need to normalize both the vals
     
-        # Identify high-error cases for VADER
-        high_error_vader = df[df['vader_error'] > 0.5]
-        print("High Error Cases for VADER:", high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']])
+    #     # Identify high-error cases for VADER
+    #     high_error_vader = df[df['vader_error'] > 0.5]
+    #     print("High Error Cases for VADER:", high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']])
     
-        # Save high-error cases to a text file
-        high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']].to_csv('vader_high_error.txt', sep='\t', index=False)
-        logging.info("Saved high-error cases for VADER to vader_high_error.txt")
+    #     # Save high-error cases to a text file
+    #     high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']].to_csv('vader_high_error.txt', sep='\t', index=False)
+    #     logging.info("Saved high-error cases for VADER to vader_high_error.txt")
 
-        logging.info("Pre-trained sentiment models comparison completed!")
-    except Exception as e:
-        logging.error(f"Error during sentiment model comparison: {e}")
+    #     logging.info("Pre-trained sentiment models comparison completed!")
+    # except Exception as e:
+    #     logging.error(f"Error during sentiment model comparison: {e}")
 
 
     # Step 13: Sentiment Prediction Using Extracted Features
@@ -414,12 +415,17 @@ if __name__ == '__main__':
     #     logging.error(f"Error during sentiment prediction: {e}")
 
     # Step 14: Topic Distributions Across Political Parties and Speakers
-    # try:
-    #     logging.info("Analyzing topic distributions across parties and speakers...")
-    #     analyze_topic_distribution_with_representation(df, topic_column='bertopic_topic', group_columns=['party_group', 'proper_name'])
-    #     logging.info("Topic distribution analysis completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during topic distribution analysis: {e}")
+    try:
+        # Assuming df is already available and contains topic modeling results
+        logging.info("Starting the topic analysis...")
+        df = pd.read_pickle("dataframe.pkl")
+        # print(df)
+        analyze_topic_distribution_with_representation(df)
+
+        logging.info("Main script completed successfully!")
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
 
     # Step 15: Explore LLM and Transformers
 

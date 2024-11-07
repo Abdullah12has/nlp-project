@@ -162,25 +162,132 @@ def train_bertopic_model(documents, checkpoint_path="progress/bertopic_checkpoin
 
     return topic_model, topics, probs
 
-def analyze_topic_distribution_with_representation(df, topic_column='topic', group_columns=['party_group', 'speaker'], topic_model=None):
-    """Analyze topic distribution across specified groups."""
-    for group_col in group_columns:
-        if group_col in df.columns:
-            plt.figure(figsize=(12, 6))
-            sns.countplot(data=df, x=topic_column, hue=group_col)
-            plt.title(f'Topic Distribution by {group_col.capitalize()}')
-            plt.xticks(rotation=45)
-            plt.legend(title=group_col)
-            plt.tight_layout()
-            plt.show()
+def analyze_topic_distribution_with_representation(df, top_topic_count=10, num_parties=10, num_speakers=10):
+    """
+    Analyze topic distributions across political parties and speakers and generate visualizations.
+    
+    Args:
+        df (DataFrame): The DataFrame containing the topics, party, and speaker data.
+        top_topic_count (int or None): The number of top topics to display in the graph legend. 
+                                      If None, show all topics in the legend.
+        num_parties (int): The number of top political parties to display.
+        num_speakers (int): The number of top speakers to display.
+    """
+    try:
+        logging.info("Analyzing topic distributions across political parties and speakers...")
 
-    # Display topics with their top words
-    if topic_model:
-        num_topics = len(topic_model.get_topics())  # Get the number of topics
-        for topic in range(num_topics):
-            words = topic_model.get_topic(topic)
-            if words:  # Check if the topic has any words
-                print(f"Topic {topic}: {', '.join([word for word, _ in words])}")
+        # Ensure topic column exists
+        if 'bertopic_topic' not in df.columns:
+            logging.error("Topic column not found in the dataframe.")
+            raise ValueError("Topic column must exist in the dataframe. Please ensure topic modeling has been performed.")
+
+        # Remove topic -1 from the data (outlier or unassigned topic)
+        df = df[df['bertopic_topic'] != -1]
+
+        # Party-based topic distribution
+        party_topic_distribution = df.groupby('party')['bertopic_topic'].value_counts(normalize=True).unstack().fillna(0)
+        logging.info(f"Topic distribution across political parties:\n{party_topic_distribution}")
+
+        # Speaker-based topic distribution
+        speaker_topic_distribution = df.groupby('proper_name')['bertopic_topic'].value_counts(normalize=True).unstack().fillna(0)
+        logging.info(f"Topic distribution across speakers:\n{speaker_topic_distribution}")
+
+        # Get top topics for each party
+        if top_topic_count is not None and top_topic_count > 0:
+            # Filter and select only the top N topics for parties
+            party_top_topics = party_topic_distribution.apply(lambda x: x.nlargest(top_topic_count), axis=1)
+            logging.info(f"Top {top_topic_count} topics for each political party:\n{party_top_topics}")
+        else:
+            party_top_topics = party_topic_distribution
+
+        # Get top topics for each speaker
+        if top_topic_count is not None and top_topic_count > 0:
+            # Filter and select only the top N topics for speakers
+            speaker_top_topics = speaker_topic_distribution.apply(lambda x: x.nlargest(top_topic_count), axis=1)
+            logging.info(f"Top {top_topic_count} topics for each speaker:\n{speaker_top_topics}")
+        else:
+            speaker_top_topics = speaker_topic_distribution
+
+        # Remove rows/columns with all NaN values
+        party_top_topics = party_top_topics.dropna(how='all', axis=0)
+        speaker_top_topics = speaker_top_topics.dropna(how='all', axis=0)
+
+        # Get the top N political parties and speakers based on the distribution
+        top_parties = party_top_topics.sum(axis=1).nlargest(num_parties).index
+        party_top_topics = party_top_topics.loc[top_parties]
+
+        top_speakers = speaker_top_topics.sum(axis=1).nlargest(num_speakers).index
+        speaker_top_topics = speaker_topic_distribution.loc[top_speakers]
+
+        # Generate a custom color palette for topics, ensuring each topic has a unique color
+        # For Party Graph: Calculate unique topics in party distribution
+        if top_topic_count is None:
+            unique_topics_party = party_top_topics.columns
+        else:
+            unique_topics_party = party_top_topics.columns[:top_topic_count]
+
+        # For Speaker Graph: Calculate unique topics in speaker distribution
+        if top_topic_count is None:
+            unique_topics_speaker = speaker_top_topics.columns
+        else:
+            unique_topics_speaker = speaker_top_topics.columns[:top_topic_count]
+
+        # Ensure color consistency across both graphs (same number of topics in both)
+        num_topics_party = len(unique_topics_party)
+        num_topics_speaker = len(unique_topics_speaker)
+
+        # Using a colormap that can handle the maximum number of topics across both graphs
+        max_topics = max(num_topics_party, num_topics_speaker)
+        color_palette = plt.cm.get_cmap('tab20', max_topics)  # Adjust colormap if necessary
+        colors = [color_palette(i) for i in range(max_topics)]
+
+        # Visualization - Topic distribution across political parties
+        ax_party = party_top_topics.plot(kind='bar', stacked=True, figsize=(12, 8), color=colors[:num_topics_party])
+        plt.title(f'Topic Distribution Across Top {num_parties} Political Parties')
+        plt.xlabel('Political Party')
+        plt.ylabel('Topic Proportion')
+        plt.tight_layout()
+
+        # Get the handles and labels for the legend
+        handles, labels = ax_party.get_legend_handles_labels()
+
+        # Display only the top 'top_topic_count' topics in the legend
+        if top_topic_count is not None:
+            ax_party.legend(handles[:top_topic_count], labels[:top_topic_count], title='Topic', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=12)
+        else:
+            # Display all topics in the legend if top_topic_count is None
+            ax_party.legend(handles, labels, title='Topic', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=12)
+
+        plt.savefig("graphs/topic_distribution_parties.png", bbox_inches='tight')
+        plt.show()
+
+        # Visualization - Topic distribution across speakers (Limit to top N speakers)
+        if not speaker_top_topics.empty:
+            ax_speaker = speaker_top_topics.plot(kind='bar', stacked=True, figsize=(12, 8), color=colors[:num_topics_speaker])
+            plt.title(f'Topic Distribution Across Top {num_speakers} Speakers')
+            plt.xlabel('Speaker')
+            plt.ylabel('Topic Proportion')
+            plt.tight_layout()
+
+            # Get the handles and labels for the legend
+            handles, labels = ax_speaker.get_legend_handles_labels()
+
+            # Display only the top 'top_topic_count' topics in the legend
+            if top_topic_count is not None:
+                ax_speaker.legend(handles[:top_topic_count], labels[:top_topic_count], title='Topic', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=12)
+            else:
+                # Display all topics in the legend if top_topic_count is None
+                ax_speaker.legend(handles, labels, title='Topic', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=12)
+
+            plt.savefig("graphs/topic_distribution_speakers.png", bbox_inches='tight')
+            plt.show()
+        else:
+            logging.warning("No topic distribution to visualize for speakers.")
+
+        logging.info(f"Topic distribution analysis across political parties and speakers completed!")
+
+    except Exception as e:
+        logging.error(f"Error during topic distribution analysis: {e}")
             
     
 
