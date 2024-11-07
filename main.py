@@ -40,6 +40,7 @@ from scripts.topic_modeling import (
     analyze_topic_evolution,
     visualize_topic_trends_over_time,
     get_lda_topic_assignments,
+    interpret_topics_with_experts_and_automation
 )
 from scripts.sentiment_prediction import predict_sentiment_with_roberta
 from scripts.sentiment_model_comparison import compare_pretrained_models
@@ -66,82 +67,82 @@ DEBUG_MODE = False  # Set to True to enable debug testing
 if __name__ == '__main__':
     start_time = time.time()  # Start the timer
 
-    # # Step 1: Load Data
-    # try:
-    #     logging.info("Loading data...")
+    # Step 1: Load Data
+    try:
+        logging.info("Loading data...")
         
-    #     # Check if DATA_PATH is defined and valid
-    #     if not os.path.exists(DATA_PATH):
-    #         logging.error("DATA_PATH is not defined or the file does not exist.")
-    #         raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
+        # Check if DATA_PATH is defined and valid
+        if not os.path.exists(DATA_PATH):
+            logging.error("DATA_PATH is not defined or the file does not exist.")
+            raise ValueError(f"DATA_PATH must point to a valid CSV file: {DATA_PATH}")
         
-    #     df = pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
+        df = pd.read_csv(DATA_PATH, encoding='ISO-8859-1')
         
-    #     # Drop rows with missing sentiment values
-    #     df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
+        # Drop rows with missing sentiment values
+        df = df.dropna(subset=['afinn_sentiment', 'bing_sentiment', 'nrc_sentiment'])  # Clean sentiment columns
         
-    #     # If in DEBUG_MODE, take a sample of the data
-    #     if DEBUG_MODE:
-    #         df = df.sample(n=min(1000, len(df)))  # Adjust sample size as needed
+        # If in DEBUG_MODE, take a sample of the data
+        if DEBUG_MODE:
+            df = df.sample(n=min(1000, len(df)))  # Adjust sample size as needed
         
-    #     logging.info("Data loaded successfully!")
-    #     logging.info(f"Data types:\n{df.dtypes}")
+        logging.info("Data loaded successfully!")
+        logging.info(f"Data types:\n{df.dtypes}")
 
-    #     # Handle speech_date conversion
-    #     if 'speech_date' in df.columns:
-    #         df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce')
-    #         if df['speech_date'].isnull().any():
-    #             logging.warning("Some 'speech_date' entries were coerced to NaT.")
-    #         df['party'] = df['party'].astype(str)
-    #         df['speech_date'] = df['speech_date'].view(np.int64) // 10**9  # Convert to seconds since epoch
+        # Handle speech_date conversion
+        if 'speech_date' in df.columns:
+            df['speech_date'] = pd.to_datetime(df['speech_date'], errors='coerce')
+            if df['speech_date'].isnull().any():
+                logging.warning("Some 'speech_date' entries were coerced to NaT.")
+            df['party'] = df['party'].astype(str)
+            df['speech_date'] = df['speech_date'].view(np.int64) // 10**9  # Convert to seconds since epoch
 
-    #     # Handle time conversion
-    #     if 'time' in df.columns:
-    #         df['time'] = pd.to_numeric(df['time'], errors='coerce')
-    #         if df['time'].isnull().any():
-    #             logging.warning("Some 'time' entries were coerced to NaN.")
+        # Handle time conversion
+        if 'time' in df.columns:
+            df['time'] = pd.to_numeric(df['time'], errors='coerce')
+            if df['time'].isnull().any():
+                logging.warning("Some 'time' entries were coerced to NaN.")
 
-    # except Exception as e:
-    #     logging.error(f"Error loading data: {e}")
-    #     raise
+    except Exception as e:
+        logging.error(f"Error loading data: {e}")
+        raise
 
-    # # Step 2: Encode Categorical Features
-    # categorical_features = ['gender', 'party_group']
-    # df = encode_categorical_features(df, categorical_features)
+    # Step 2: Encode Categorical Features
+    categorical_features = ['gender', 'party_group']
+    df = encode_categorical_features(df, categorical_features)
 
-    # # Step 3: Handle Missing Values
-    # try:
-    #     logging.info("Checking for missing values in the DataFrame...")
-    #     missing_values = df.isnull().sum()
-    #     logging.info(f"Missing values in each column:\n{missing_values[missing_values > 0]}")
+    # Step 3: Handle Missing Values
+    try:
+        logging.info("Checking for missing values in the DataFrame...")
+        missing_values = df.isnull().sum()
+        logging.info(f"Missing values in each column:\n{missing_values[missing_values > 0]}")
 
-    #     if df['year'].isnull().any():
-    #         logging.warning("Missing values found in 'year' column; filling with median.")
-    #         df['year'].fillna(df['year'].median(), inplace=True)
+        if df['year'].isnull().any():
+            logging.warning("Missing values found in 'year' column; filling with median.")
+            df['year'].fillna(df['year'].median(), inplace=True)
 
-    #     if df['gender'].isnull().any():
-    #         logging.warning("Missing values found in 'gender' column; filling with 'Unknown'.")
-    #         df['gender'].fillna('Unknown', inplace=True)
+        if df['gender'].isnull().any():
+            logging.warning("Missing values found in 'gender' column; filling with 'Unknown'.")
+            df['gender'].fillna('Unknown', inplace=True)
 
-    #     if df['party_group'].isnull().any():
-    #         logging.warning("Missing values found in 'party_group' column; filling with 'Unknown'.")
-    #         df['party_group'].fillna('Unknown', inplace=True)
+        if df['party_group'].isnull().any():
+            logging.warning("Missing values found in 'party_group' column; filling with 'Unknown'.")
+            df['party_group'].fillna('Unknown', inplace=True)
 
-    #     logging.info("Missing values handled successfully.")
+        logging.info("Missing values handled successfully.")
         
-    # except Exception as e:
-    #     logging.error(f"Error handling missing values: {e}")
-    #     raise
+    except Exception as e:
+        logging.error(f"Error handling missing values: {e}")
+        raise
 
-    # # Step 4: Text Preprocessing
-    # try:
-    #     logging.info("Starting text preprocessing...")
-    #     preprocessor = TextPreprocessor()
-    #     df['cleaned_text'] = df[TEXT_COLUMN].apply(preprocessor.clean_text)
-    #     logging.info("Text preprocessing completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during text preprocessing: {e}")
-    #     raise
+    # Step 4: Text Preprocessing
+    try:
+        logging.info("Starting text preprocessing...")
+        preprocessor = TextPreprocessor()
+        df['cleaned_text'] = df[TEXT_COLUMN].apply(preprocessor.clean_text)
+        logging.info("Text preprocessing completed!")
+    except Exception as e:
+        logging.error(f"Error during text preprocessing: {e}")
+        raise
 
     # # Step 5: Initial Data Exploration
     # try:
@@ -297,7 +298,7 @@ if __name__ == '__main__':
     #     logging.info("Starting BERTopic model training...")
         
     #     # Train BERTopic model with savepoints
-    #     bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+        # bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
         
     #     print(topics)
     #     # Save topics to DataFrame
@@ -415,19 +416,46 @@ if __name__ == '__main__':
     #     logging.error(f"Error during sentiment prediction: {e}")
 
     # Step 14: Topic Distributions Across Political Parties and Speakers
+    # try:
+    #     # Assuming df is already available and contains topic modeling results
+    #     logging.info("Starting the topic analysis...")
+    #     df = pd.read_pickle("dataframe.pkl")
+    #     # print(df)
+    #     analyze_topic_distribution_with_representation(df)
+
+    #     logging.info("Main script completed successfully!")
+
+    # except Exception as e:
+    #     logging.error(f"An error occurred: {e}")
+        
+    # Step 15: Topic Representation and Interpretation:
+    
     try:
-        # Assuming df is already available and contains topic modeling results
-        logging.info("Starting the topic analysis...")
-        df = pd.read_pickle("dataframe.pkl")
-        # print(df)
-        analyze_topic_distribution_with_representation(df)
-
-        logging.info("Main script completed successfully!")
-
+        # df = pd.read_pickle("dataframe.pkl")
+        # Interpret the topics and automate labeling
+        
+        # xxxx No Need to run this again if Task 5 is already run xxxxxxx
+        bertopic_model, topics, probs = train_bertopic_model(df['speech'], "progress/bertopic_checkpoint.pkl", min_topic_size=15)
+        df['bertopic_topic'] = topics
+        
+        # Interpret topics with predefined labels NEED TO BE ADDED AS PER SUBJECT
+        predefined_labels = {
+            'Economy': ['finance', 'economy', 'tax', 'budget'],
+            'Health': ['health', 'hospital', 'medicine', 'treatment'],
+            'Environment': ['climate', 'pollution', 'environment', 'sustainability']
+        }
+        result = interpret_topics_with_experts_and_automation(df, bertopic_model,predefined_labels=predefined_labels)
+        # Print the result (optional)
+        # print(result)
+        # Save the result to a CSV file
+        result.to_csv("topic_interpretation_results.csv", index=False)
+        # Optionally, save the result as a pickle file
+        result.to_pickle("topic_interpretation_results.pkl")
+        
     except Exception as e:
-        logging.error(f"An error occurred: {e}")
-
-    # Step 15: Explore LLM and Transformers
+        logging.error(f"Error during topic interpretation: {e}")
+        
+    # Step 16: Explore LLM and Transformers
 
     # try:
     #     logging.info("Exploring sentiment analysis with LLMs and transformers...")

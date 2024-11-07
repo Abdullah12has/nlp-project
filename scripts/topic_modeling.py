@@ -10,7 +10,7 @@ import seaborn as sns
 import pandas as pd
 import pickle
 import os
-
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def save_checkpoint(model, dictionary, corpus, num_topics, coherence, checkpoint_path):
@@ -406,3 +406,103 @@ def get_lda_topic_assignments(lda_model, documents):
         topic_assignments.append(most_probable_topic)
     
     return topic_assignments
+
+
+def extract_representative_words(df, model, n_words=10):
+    """
+    Extract the top representative words for each topic directly from the BERTopic model.
+    
+    :param df: DataFrame containing topics assigned by the model (e.g., 'bertopic_topic' column)
+    :param model: Fitted BERTopic model
+    :param n_words: Number of representative words to extract per topic
+    :return: DataFrame with topic number and top words
+    """
+    topic_words = []
+    
+    # Ensure 'bertopic_topic' is in the dataframe (topics assigned to each document)
+    if 'bertopic_topic' not in df.columns:
+        raise ValueError("DataFrame must contain a 'bertopic_topic' column")
+    
+    # Extract the topics using BERTopic model
+    topics = model.get_topics()
+    
+    # For each topic, get the top n_words (represented by words with highest probabilities)
+    for topic_num, words in topics.items():
+        top_words = [word for word, _ in sorted(words, key=lambda x: x[1], reverse=True)[:n_words]]
+        topic_words.append((topic_num, top_words))
+    
+    return pd.DataFrame(topic_words, columns=['Topic', 'Top Words'])
+
+def automate_topic_labeling(representative_words, predefined_labels):
+    """
+    Automate labeling of topics by matching representative words to predefined labels.
+    
+    :param representative_words: DataFrame containing topics and their representative words
+    :param predefined_labels: Dictionary with predefined labels for topics (optional)
+    :return: DataFrame with topics labeled based on similarity to predefined labels
+    """
+    # if predefined_labels is None:
+    #     predefined_labels = {
+    #         'Economy': ['finance', 'economy', 'tax', 'budget'],
+    #         'Health': ['health', 'hospital', 'medicine', 'treatment'],
+    #         'Environment': ['climate', 'pollution', 'environment', 'sustainability']
+    #     }
+    
+    labeled_topics = []
+    
+    for _, row in representative_words.iterrows():
+        topic = row['Topic']
+        top_words = row['Top Words']
+        
+        # Join the topic's top words into a single string for similarity comparison
+        topic_vec = ' '.join(top_words)
+        
+        # Initialize variables to track the most similar label
+        max_similarity = 0
+        assigned_label = 'Unknown'
+        
+        # Compare with each label's predefined keywords
+        for label, keywords in predefined_labels.items():
+            keyword_vec = ' '.join(keywords)
+            
+            # Vectorize the keyword and topic vectors
+            topic_vector = CountVectorizer().fit_transform([keyword_vec, topic_vec]).toarray()
+            
+            # Compute the cosine similarity between the topic and the label keywords
+            similarity = cosine_similarity([topic_vector[0]], [topic_vector[1]])[0][0]
+            
+            # If the similarity is the highest so far, assign this label to the topic
+            if similarity > max_similarity:
+                max_similarity = similarity
+                assigned_label = label
+        
+        labeled_topics.append((topic, assigned_label))
+    
+    return pd.DataFrame(labeled_topics, columns=['Topic', 'Label'])
+
+def interpret_topics_with_experts_and_automation(df, model, predefined_labels):
+    """
+    Integrates both expert interpretation and automated labeling for topics.
+    
+    :param df: DataFrame containing the documents and the assigned topics (e.g., 'bertopic_topic')
+    :param model: Fitted BERTopic model
+    :param predefined_labels: Optional predefined labels to classify topics
+    """
+    # Step 1: Extract representative words based on BERTopic model
+    representative_words = extract_representative_words(df, model)
+    
+    # Step 2: Automate labeling based on predefined labels (optional)
+    automated_labels = automate_topic_labeling(representative_words, predefined_labels=predefined_labels)
+    
+    # Step 3: Get topic names (the actual labels from the BERTopic model)
+    topic_names = model.get_topic_info()
+    
+    # Map the topic number to the actual topic name
+    representative_words['Topic Name'] = representative_words['Topic'].map(topic_names.set_index('Topic')['Name'])
+    
+    # Step 4: Combine the results with topic names and automated labels
+    result = pd.merge(representative_words, automated_labels, on='Topic')
+    
+    # Optionally, you can add domain expert interpretation here (e.g., manual input)
+    
+    return result
