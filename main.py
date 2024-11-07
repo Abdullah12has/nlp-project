@@ -330,11 +330,11 @@ if __name__ == '__main__':
     try:
         
         logging.info("Task 6: LDA training")
-        lda_model, df, topic_names = train_and_visualize_lda(df, text_column='cleaned_text', time_column='year')
-        visualize_topic_trends(df, topic_column='lda_topic', time_column='year', topic_names=topic_names)
-        
-        # logging.info("Task 6: BERTopic training")
-        # bertopic_model, df = train_and_visualize_bertopic(df)
+        # lda_model, df, topic_names = train_and_visualize_lda(df, text_column='cleaned_text', time_column='year')
+        # visualize_topic_trends(df, topic_column='lda_topic', time_column='year', topic_names=topic_names)
+
+        logging.info("Task 6: BERTopic training")
+        bertopic_model, df = train_and_visualize_bertopic(df)
        
        
         # visualize_topic_trends(df, 'bertopic_topic', 'year')
@@ -344,17 +344,23 @@ if __name__ == '__main__':
 
 
     # Step 11: Sentiment Correlation with Topics
-    # try:
-    #     logging.info("Analyzing sentiment...")
-    #     df, summary = classify_sentiment(df)
-    #     df = analyze_sentiment(df, text_column='cleaned_text') 
-    #     logging.info("Sentiment analysis completed!")
+    '''
+    Sentiment Correlation with Topics: Perform sentiment analysis on debate transcripts using VADER or TextBlob, with
+    potential fine-tuning for parliamentary language. Correlate sentiment trends with identified topics, highlighting emotional
+    patterns and contextual nuances like sarcasm or negation.
+    
+    '''
+    try:
+        logging.info("Analyzing sentiment...")
+        df, summary = classify_sentiment(df)
+        df = analyze_sentiment(df, text_column='cleaned_text') 
+        logging.info("Sentiment analysis completed!")
 
-    #     logging.info("Correlating sentiment with topics...")
-    #     correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='lda_topic')
-    #     logging.info("Sentiment correlation with topics completed!")
-    # except Exception as e:
-    #     logging.error(f"Error during sentiment correlation analysis: {e}")
+        logging.info("Correlating sentiment with topics...")
+        correlate_sentiment_with_topics(df, sentiment_column='sentiment_confidence', topic_column='lda_topic')
+        logging.info("Sentiment correlation with topics completed!")
+    except Exception as e:
+        logging.error(f"Error during sentiment correlation analysis: {e}")
 
     # # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
     # try:

@@ -105,6 +105,13 @@ def train_and_visualize_bertopic(df, text_column='cleaned_text', time_column='ye
     # Visualize topic trends over time
     topic_trends_fig = bertopic_model.visualize_topics_over_time(topics_over_time)
     topic_trends_fig.write_html(os.path.join(output_dir, 'bertopic_topic_trends_over_time.html'))
+
+    with open(os.path.join(output_dir, 'bertopic_topics.txt'), 'w') as file:
+        for topic_id in bertopic_model.get_topic_info().Topic:
+            if topic_id != -1:  # Exclude outliers
+                topic_words = bertopic_model.get_topic(topic_id)
+                topic_words_str = ", ".join([word for word, _ in topic_words])
+                file.write(f"Topic {topic_id}: {topic_words_str}\n\n")
     
     return bertopic_model, df
 
