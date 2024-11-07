@@ -199,14 +199,29 @@ def topic_evolution_over_time(df, topic_column='topic', time_column='year'):
     plt.tight_layout()
     plt.show()
 
-def visualize_topic_trends(df, topic_column, time_column):
-    """Visualize topic trends over time."""
+def visualize_topic_trends(df, topic_column, time_column, topic_names=None):
+    """
+    Visualize topic trends over time with topic names.
+    
+    Parameters:
+    - df: DataFrame with topics and time columns.
+    - topic_column: Column containing topic IDs.
+    - time_column: Column containing the time (e.g., year).
+    - topic_names: Dictionary mapping topic IDs to topic names (e.g., {0: "Economy", 1: "Health"}).
+    """
+    
+    # Count the occurrences of each topic per time unit
     topic_counts = df.groupby([time_column, topic_column]).size().unstack(fill_value=0)
 
     plt.figure(figsize=(15, 8))
+    
+    # Plot each topic trend
     for topic in topic_counts.columns:
-        plt.plot(topic_counts.index, topic_counts[topic], label=f'Topic {topic}')
+        # Use topic name if available; otherwise, use topic ID
+        label = topic_names.get(topic, f'Topic {topic}') if topic_names else f'Topic {topic}'
+        plt.plot(topic_counts.index, topic_counts[topic], label=label)
 
+    # Plot formatting
     plt.title('Topic Trends Over Time')
     plt.xlabel('Year')
     plt.ylabel('Number of Speeches')

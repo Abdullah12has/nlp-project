@@ -12,6 +12,22 @@ import pickle
 import os
 
 
+def get_most_probable_topic(lda_model, doc, dictionary):
+    """Get the most probable topic for a document."""
+    bow = dictionary.doc2bow(doc.split())
+    topics = lda_model.get_document_topics(bow)
+    return max(topics, key=lambda x: x[1])[0]
+
+def extract_topic_names(lda_model, num_words=5):
+    """Extracts topic names based on the top words for each topic."""
+    topic_names = {}
+    for topic_id in range(lda_model.num_topics):
+        # Get top words for the topic
+        top_words = lda_model.show_topic(topic_id, topn=num_words)
+        # Join the words to create a name
+        topic_names[topic_id] = " ".join([word for word, prob in top_words])
+    return topic_names
+
 def train_and_visualize_lda(df, text_column='cleaned_text', time_column='year', num_topics=5, passes=5, output_dir='outputT6'):
     """
     Train a dynamic LDA model and visualize topics over time.
@@ -27,6 +43,7 @@ def train_and_visualize_lda(df, text_column='cleaned_text', time_column='year', 
     Returns:
     - lda_model: Trained LDA model.
     - df: DataFrame with topic assignments added.
+    - topic_names: Dictionary mapping topic IDs to representative topic names.
     """
     # Preprocess text for LDA, removing empty or null values
     df = df.dropna(subset=[text_column])
@@ -47,7 +64,10 @@ def train_and_visualize_lda(df, text_column='cleaned_text', time_column='year', 
     # Assign topics to each document
     df['lda_topic'] = df[text_column].apply(lambda doc: get_most_probable_topic(lda_model, doc, dictionary))
     
-    return lda_model, df
+    # Extract topic names for each topic
+    topic_names = extract_topic_names(lda_model)
+    
+    return lda_model, df, topic_names
 
 
 def train_and_visualize_bertopic(df, text_column='cleaned_text', time_column='year', min_topic_size=5, output_dir='outputT6'):

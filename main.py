@@ -57,7 +57,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Constants and paths
 # DATA_PATH = 'data/subset_senti_df_100.csv'
-DATA_PATH = 'data/senti_df_main.csv'
+DATA_PATH = 'data/subset_senti_df_100.csv'
 TEXT_COLUMN = 'speech'
 SENTIMENT_SCORE_COLUMN = 'afinn_sentiment'
 DEBUG_MODE = False  # Set to True to enable debug testing
@@ -329,13 +329,14 @@ if __name__ == '__main__':
     '''
     try:
         
-        # logging.info("Task 6: LDA training")
-        # lda_model, df = train_and_visualize_lda(df)
-        logging.info("Task 6: BERTopic training")
-        bertopic_model, df = train_and_visualize_bertopic(df)
-    
-        # Visualize topic trends for both LDA and BERTopic
-        # visualize_topic_trends(df, 'lda_topic', 'year')
+        logging.info("Task 6: LDA training")
+        lda_model, df, topic_names = train_and_visualize_lda(df, text_column='cleaned_text', time_column='year')
+        visualize_topic_trends(df, topic_column='lda_topic', time_column='year', topic_names=topic_names)
+        
+        # logging.info("Task 6: BERTopic training")
+        # bertopic_model, df = train_and_visualize_bertopic(df)
+       
+       
         # visualize_topic_trends(df, 'bertopic_topic', 'year')
 
     except Exception as e:
