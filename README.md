@@ -179,6 +179,6 @@ Requirements
 Refer to requirements.txt for the complete list.
 
 Results and Observations
-------------------------
+-----------------------
 
 *   Detailed results, including visualizations and sentiment trends, can be found within the notebook output.
