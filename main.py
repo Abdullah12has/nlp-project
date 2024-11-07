@@ -371,21 +371,38 @@ if __name__ == '__main__':
 
     # # Step 12: Comparison of Pre-Trained Sentiment Models with Ground Truth
     '''
+    Comparison of Pre-Trained Sentiment Models with Ground Truth Labels: Use pre-trained models like VADER and
+    TextBlob to analyze the sentiment of speeches. Then, compare these sentiment scores with the ground truth scores in the
+    dataset by error analysis to evaluate the alignment between the pre-trained models and the true scores. Calculate evaluation
+    metrics such as MSE and RMSE for both VADER and TextBlob. Finally, conduct an error analysis to examine cases where
+    the pre-trained models significantly diverge from the ground truth (e.g., positive speeches but classified as negative by
+    VADER). Discuss any patterns or characteristics in these speeches, such as the presence of sarcasm, ambiguous language, or
+    other linguistic features, where the models tend to perform poorly.
     
     '''
     try:
         df = pd.read_pickle("dataframe.pkl")
         logging.info("Comparing pre-trained sentiment models with ground truth...")
+    
         # Add device specification and batch size
         device = "cuda" if torch.cuda.is_available() else "cpu"
         classifier = pipeline("sentiment-analysis", device=device)
+    
+        # Perform sentiment model comparison
         df = compare_pretrained_models(df, TEXT_COLUMN, SENTIMENT_SCORE_COLUMN) # using afinn need to normalize both the vals
-        # df.to_pickle("dataframe.pkl")
+    
+        # Identify high-error cases for VADER
         high_error_vader = df[df['vader_error'] > 0.5]
         print("High Error Cases for VADER:", high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']])
+    
+        # Save high-error cases to a text file
+        high_error_vader[[TEXT_COLUMN, SENTIMENT_SCORE_COLUMN, 'vader_score', 'vader_error']].to_csv('vader_high_error.txt', sep='\t', index=False)
+        logging.info("Saved high-error cases for VADER to vader_high_error.txt")
+
         logging.info("Pre-trained sentiment models comparison completed!")
     except Exception as e:
         logging.error(f"Error during sentiment model comparison: {e}")
+
 
     # Step 13: Sentiment Prediction Using Extracted Features
     # try:
